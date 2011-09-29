@@ -10,7 +10,7 @@ type
     class function Lock<T>(obj: TObject; F: TFunc<T>): T;overload;static;
   end;
 
-  TUnprotectControl = class(TControl)
+  TUnprotectControl = class(Controls.TControl)
   public
     property Caption;
     property Text;

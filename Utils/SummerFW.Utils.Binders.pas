@@ -2,8 +2,9 @@ unit SummerFW.Utils.Binders;
 
 interface
 
-uses Grids, SysUtils, Classes, RTTI, Controls, StdCtrls, ActnList,
-  SummerFW.Utils.Collections;
+uses
+  Grids, SysUtils, Classes, RTTI, Controls, StdCtrls, ActnList,
+  SummerFW.Utils.RTL, SummerFW.Utils.Collections;
 
 type
   TUpdateModelEvent = procedure(Context: TRttiObject; Value: TValue) of object;
@@ -130,18 +131,16 @@ type
     property RType: TRttiType read GetRType;
   end;
 
-
 implementation
 
-uses TypInfo, Windows,
-    SummerFW.Utils.RTL;
-
+uses
+  TypInfo, Windows;
 type
   TGridBinder = class(TListBinder<TStringGrid>)
   public
     procedure DoUpdateTarget(Value: TValue); override;
   end;
-{ Binder }
+  { Binder }
 
 constructor TBinder.Create(AOwner: TComponent);
 begin
@@ -306,7 +305,7 @@ var
 begin
   Affecteds := TStringList.Create;
   try
-    if Operation = opRemove then begin
+    if Operation = OpRemove then begin
       for EventName in FSavedEvents.Keys do begin
         SavedMethod := FSavedEvents[EventName];
         if SavedMethod.Data = AComponent then
@@ -381,7 +380,7 @@ end;
 procedure TPropertyBinder<T>.Notification(AComponent: TComponent;
     Operation: TOperation);
 begin
-  if Operation = opRemove then begin
+  if Operation = OpRemove then begin
     if SavedMethod.Data = AComponent then begin
       SavedMethod.Code := nil;
       SavedMethod.Data := nil;
@@ -454,8 +453,8 @@ end;
 
 procedure TListBinder<T>.DoUpdateTarget(Value: TValue);
 begin
-  if Value.IsType<TList<TObject>> then
-    FModel := Value.AsType<TList<TObject>>
+  if Value.IsType < TList < TObject >> then
+    FModel := Value.AsType < TList < TObject >>
 end;
 
 { TGridBinder }
@@ -549,9 +548,47 @@ begin
   Result := 'OnChange';
 end;
 
-function TComboBoxBinder.GetTargetValue: TValue;
+function GetEnumPrefix(TypeInfo: PTypeInfo): string;
+var
+  FirstIdent: string;
+  Ident: string;
+  idxIdent: Integer;
+  p: Integer;
+  stop: Boolean;
 begin
-  Result := TUnprotectControl(Client).Text;
+  Result := '';
+  FirstIdent := TypInfo.GetEnumName(TypeInfo, 0);
+  p := 0;
+  while p < Length(FirstIdent) do begin
+    inc(p);
+    for idxIdent := 1 + GetTypeData(TypeInfo).MinValue to GetTypeData(TypeInfo).MaxValue do begin
+      Ident := TypInfo.GetEnumName(TypeInfo, idxIdent);
+      if FirstIdent[p] <> Ident[p] then Exit;
+    end;
+    Result := Result + FirstIdent[p];
+  end;
+end;
+
+function TComboBoxBinder.GetTargetValue: TValue;
+var
+  Prop: TRttiInstanceProperty;
+  RType: TRttiType;
+  idx: Integer;
+  FirstValueStr: string;
+  ValueStr: string;
+  prefix: string;
+  p: Integer;
+  stop: Boolean;
+begin
+  Prop := (Context as TRttiInstanceProperty);
+  RType := Prop.PropertyType;
+  if (RType is TRttiEnumerationType) then begin
+    Result :=
+    TValue.FromOrdinal(RType.Handle, GetEnumValue(RType.Handle, TUnprotectControl(Client).Text))
+
+  end
+  else
+    Result := TUnprotectControl(Client).Text;
 end;
 
 procedure TComboBoxBinder.SetTargetValue(Value: TValue);

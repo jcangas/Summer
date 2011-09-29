@@ -28,6 +28,7 @@ type
     function FindByID(Klass: TClass; ID: TValue): TObject;
     function From<T: class, constructor>(Klass: TClass = nil): IQueryable<T>;
     procedure Save(Obj: TObject);
+    function CacheCount: Integer;
   end;
 
 type
@@ -144,6 +145,11 @@ begin
 end;
 
 { TDDOStore }
+
+function TDDOStore.CacheCount: Integer;
+begin
+  Result := FCache.Count;
+end;
 
 constructor TDDOStore.Create(ConnectionStr: string);
 begin
