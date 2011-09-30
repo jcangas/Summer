@@ -10,11 +10,16 @@ type
   TStoreInfo = record
   private
     FState: TStoreStateClass;
+    /// -1: Object created but none readed
+    ///  0: ID was assigned
+    ///  1: PlainProps readed
+    ///  2: All Readed
+    FReadGroup: SmallInt;
     class function GetFieldAddress(AObject: TObject): PPStoreInfo;
       static; inline;
+    class function Create: PStoreInfo; static;
   public
     class function GetFor(AObject: TObject): PStoreInfo; static;
-    class function Create: PStoreInfo; static;
     class procedure Destroy(AObject: TObject); overload; static;
 
     class function GetID(Obj: TObject): Int64; static;
@@ -36,8 +41,13 @@ type
     class function MakeDeleted(Obj: TObject): TObject; static;
     class function MakeSaved(Obj: TObject): TObject; static;
 
+    class function SetReadGroup(Obj: TObject; NewReadGroup: SmallInt): TObject; static;
+    class function GetReadGroup(Obj: TObject): SmallInt; static;
+
     procedure Destroy; overload;
     property State: TStoreStateClass read FState write FState;
+    property ReadGroup: SmallInt read FReadGroup write FReadGroup;
+
   end;
 
 
@@ -87,6 +97,7 @@ begin
   New(Result);
   FillChar(Result^, SizeOf(Result^), 0);
   Result.FState := Transient;
+  Result.FReadGroup := -1;
 end;
 
 class procedure TStoreInfo.Destroy(AObject: TObject);
@@ -230,6 +241,20 @@ begin
   with GetFor(Obj)^ do
     State := State.MakeUpdated;
   TCallback.CallAfterUpdate(Obj);
+end;
+
+class function TStoreInfo.SetReadGroup(Obj: TObject;
+  NewReadGroup: SmallInt): TObject;
+begin
+  Result := Obj;
+  with GetFor(Obj)^ do
+    ReadGroup := NewReadGroup;
+end;
+
+class function TStoreInfo.GetReadGroup(Obj: TObject): SmallInt;
+begin
+  with GetFor(Obj)^ do
+    Result := ReadGroup;
 end;
 
 end.

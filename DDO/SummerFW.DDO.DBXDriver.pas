@@ -24,6 +24,7 @@ type
 function CreateDriver(ConnectionStr: string): IDDODriver;overload;
 
 implementation
+uses SummerFW.Utils.Log;
 
 type
   TDBXDriver = class(TInterfacedObject, IDDODriver)
@@ -84,14 +85,21 @@ begin
 end;
 
 function TDBXDriver.Exec(Qry: OQL): Integer;
+var
+  SQL: string;
 begin
-  Result := FConnection.ExecuteDirect(Qry.ToSQL);
+  SQL := Qry.ToSQL;
+  Logger.Trace('DDO-SQL: ' + SQL);
+  Result := FConnection.ExecuteDirect(SQL);
 end;
 
 function TDBXDriver.ExecSingleValue(Qry: OQL): TValue;
 var
   RS: TDataset;
+  SQL: string;
 begin
+  SQL := Qry.ToSQL;
+  Logger.Trace('DDO-SQL: ' + SQL);
   FConnection.Execute(Qry.ToSQL, nil, @RS);
   Result := TValue.FromVariant(RS.Fields[0].Value);
   RS.Free;
@@ -105,9 +113,13 @@ end;
 { TDBXStoreReader }
 
 constructor TDBXStoreReader.Create(Driver: TDBXDriver; Qry: OQL);
+var
+  SQL: string;
 begin
   inherited Create;
   FDriver := Driver;
+  SQL := Qry.ToSQL;
+  Logger.Trace('DDO-SQL: ' + SQL);
   FDriver.FConnection.Execute(Qry.ToSQL, nil, @FDataset);
   Reset;
 end;

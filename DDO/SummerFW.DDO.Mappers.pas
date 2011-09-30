@@ -267,7 +267,10 @@ end;
 
 function TPropMapper.GetRelatedClass: TClass;
 begin
-  Result := FRelation.RelatedClass;
+  if Relation = nil then
+    Result := nil
+  else
+    Result := FRelation.RelatedClass;
 end;
 
 function TPropMapper.GetValue(Obj: TObject): TValue;

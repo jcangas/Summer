@@ -2,7 +2,8 @@ unit SummerFW.DDO.Store;
 
 interface
 
-uses Rtti, Classes, SysUtils,
+uses
+  Rtti, Classes, SysUtils,
   SummerFW.Utils.Collections,
   SummerFW.DDO.OQL,
   SummerFW.DDO.CallBack,
@@ -11,12 +12,15 @@ uses Rtti, Classes, SysUtils,
   SummerFW.DDO.DBXDriver;
 
 type
+  TStoreCache = TObjectDictionary<string, TObject>;
+  TCacheSearchResult = (csFailed, csAdded, csFound);
+  TCacheSearchMode = (csmStrict, csAutoAdd);
   TDDOStore = class
   strict private
-    FCache: TObjectDictionary<TValue, TObject>;
+    FCache: TStoreCache;
     FDriver: IDDODriver;
   private
-    function GetFromCache(Klass: TClass; ID: TValue; out Obj: TObject): Boolean;
+    function GetFromCache(Klass: TClass; ID: TValue; out Obj: TObject; SearchMode: TCacheSearchMode = csAutoAdd): TCacheSearchResult;
     procedure SaveNew(Obj: TObject);
     procedure SaveModified(Obj: TObject);
     procedure SaveDeleted(Obj: TObject);
@@ -51,7 +55,8 @@ type
     function DELETE: Integer;
   end;
 
-  TCursorEnumerator<T: class, constructor> = class(TInterfacedEnumerator, IEnumerator<T>)
+  TCursorEnumerator<T: class, constructor> = class(TInterfacedEnumerator,
+      IEnumerator<T>)
   strict private
     FStore: TDDOStore;
     FReader: IStoreReader;
@@ -61,7 +66,7 @@ type
     function ReadPlainProp(Obj: TObject; Prop: TPropMapper): TValue;
     procedure ReadReferenceProp(Obj: TObject; Prop: TPropMapper);
 
-    function ReadStoredValue(Name: string): TValue;
+    function ReadStoredValue(name: string): TValue;
   protected
     function DoGetCurrent: TObject; override;
     function MoveNext: Boolean; override;
@@ -69,10 +74,9 @@ type
     function GetCurrent: T;
   public
     constructor Create(Store: TDDOStore; Map: TMapper;
-      Reader: IStoreReader); overload;
+        Reader: IStoreReader); overload;
   end;
 
-  //TCursor<T: class, constructor> = class(TInterfacedEnumerable<T>, IEnumerable<T>)
   TCursor<T: class, constructor> = class(TList<T>, IEnumerable<T>, IEnumerable)
   strict private
     FStore: TDDOStore;
@@ -90,20 +94,24 @@ type
     FStore: TObject;
     procedure ReadRelationProp(Obj: TObject; Prop: TPropMapper);
   protected
-    function GetInstance: TObject;override;
-    function GetMapper: TPropMapper;override;
+    function GetInstance: TObject; override;
+    function GetMapper: TPropMapper; override;
   public
     constructor Create(Obj: TObject; Prop: TPropMapper; AStore: TObject);
-    procedure Load;override;
+    procedure Load; override;
     property Mapper: TPropMapper read GetMapper;
   end;
 
 implementation
-uses DBPlatform;
+
+uses
+  SummerFW.Utils.Log,
+  DBPlatform;
 
 { TLazyLoader }
 
-constructor TLazzyLoader.Create(Obj: TObject; Prop: TPropMapper; AStore: TObject);
+constructor TLazzyLoader.Create(Obj: TObject; Prop: TPropMapper;
+    AStore: TObject);
 begin
   inherited Create;
   FStore := AStore;
@@ -111,20 +119,22 @@ begin
   FPropMapper := Prop;
 end;
 
-procedure TLazzyLoader.ReadRelationProp(Obj: TObject;Prop: TPropMapper);
+procedure TLazzyLoader.ReadRelationProp(Obj: TObject; Prop: TPropMapper);
 var
   List: TList<TObject>;
   ClassReferenced: TClass;
   ReferenceKey: string;
 begin
+  if not(Prop.Relation is HasManyAttribute) then
+    Exit;
   ClassReferenced := Prop.RelatedClass;
   List := TList<TObject>.Create;
   List._AddRef;
-  if not (Prop.Relation is HasManyAttribute) then Exit;
-  ReferenceKey := TMapper.GetFor(ClassReferenced)[HasManyAttribute(Prop.Relation).RelatedProp].StorageName;
+  ReferenceKey := TMapper.GetFor(ClassReferenced)
+      [HasManyAttribute(Prop.Relation).RelatedProp].StorageName;
   with OQL do
     List.AddRange((FStore as TDDOStore).From<TObject>(ClassReferenced)
-      .WHERE(EQ(ReferenceKey, TStoreInfo.GetID(Obj))).SELECT);
+        .WHERE(EQ(ReferenceKey, TStoreInfo.GetID(Obj))).SELECT);
 
   Prop.SetValue(Obj, List);
 end;
@@ -154,7 +164,7 @@ end;
 constructor TDDOStore.Create(ConnectionStr: string);
 begin
   FDriver := CreateDriver(ConnectionStr);
-  FCache := TObjectDictionary<TValue, TObject>.Create([doOwnsValues]);
+  FCache := TStoreCache.Create([DoOwnsValues]);
 end;
 
 destructor TDDOStore.Destroy;
@@ -166,23 +176,28 @@ end;
 function TDDOStore.GenObjID(Klass: TClass): TValue;
 begin
   Result := FDriver.ExecSingleValue
-    (OQL.Raw('SELECT NEXT VALUE FOR GEN_NEXT_ID FROM RDB$DATABASE'));
+      (OQL.Raw('SELECT NEXT VALUE FOR GEN_NEXT_ID FROM RDB$DATABASE'));
 end;
 
 function TDDOStore.GetFromCache(Klass: TClass; ID: TValue;
-  out Obj: TObject): Boolean;
+    out Obj: TObject; SearchMode: TCacheSearchMode = csAutoAdd): TCacheSearchResult;
 begin
-  Result := FCache.ContainsKey(ID);
-  if not Result then
-    FCache.Add(ID, Klass.NewInstance);
-  Obj := FCache[ID];
+  Result := csFailed;
+  if FCache.ContainsKey(ID.ToString) then begin
+    Result := csFound;
+    Logger.Trace('CACHE: HIT+ %s %s', [Klass.Classname, ID.ToString]);
+  end
+  else if SearchMode = csAutoAdd then begin
+    FCache.Add(ID.ToString, Klass.NewInstance);
+    Result := csAdded;
+  end;
+  Obj := FCache[ID.ToString];
 end;
 
 function TDDOStore.FindByID(Klass: TClass; ID: TValue): TObject;
 begin
-  if GetFromCache(Klass, ID, Result) then
-    Exit;
-  Result := From<TObject>(Klass).WHERE(OQL.EQ('ID', ID)).FIRST;
+  if GetFromCache(Klass, ID, Result) <> csFound then
+    Result := From<TObject>(Klass).WHERE(OQL.EQ('ID', ID)).FIRST;
 end;
 
 function TDDOStore.From<T>(Klass: TClass = nil): IQueryable<T>;
@@ -193,7 +208,7 @@ end;
 { TQueryable<T> }
 
 constructor TQueryable<T>.Create(ADataStore: TDDOStore;
-  FromClass: TClass = nil);
+    FromClass: TClass = nil);
 begin
   inherited Create;
   if not Assigned(FromClass) then
@@ -222,7 +237,7 @@ begin
   C := TCursor<TObject>.Create(FDataStore, FMap, FQuery);
   Obj := nil;
   for Obj in C do
-    break;
+    Break;
   Result := T(Obj);
 end;
 
@@ -274,7 +289,8 @@ end;
 
 function TCursor<T>.GetEnumerator: IEnumerator<T>;
 begin
-  Result := TCursorEnumerator<T>.Create(FStore, FMap, FStore.Driver.CreateReader(FQry));
+  Result := TCursorEnumerator<T>.Create(FStore, FMap,
+      FStore.Driver.CreateReader(FQry));
 end;
 
 procedure TDDOStore.Save(Obj: TObject);
@@ -293,7 +309,8 @@ end;
 procedure TDDOStore.SaveDeleted(Obj: TObject);
 begin
   with OQL do
-    Self.From<TObject>(Obj.ClassType).WHERE(EQ('ID', TStoreInfo.GetID(Obj))).DELETE;
+    Self.From<TObject>(Obj.ClassType)
+        .WHERE(EQ('ID', TStoreInfo.GetID(Obj))).DELETE;
 end;
 
 procedure TDDOStore.SaveModified(Obj: TObject);
@@ -309,15 +326,16 @@ begin
     if M.IsID then
       Continue;
     if M.IsRelation then
-    Continue;
+      Continue;
     if M.IsReference then
-      LetExpr.Add(OQL.Let(M.StorageName, TStoreInfo.GetID(M.GetValue(Obj).AsObject)))
+      LetExpr.Add(OQL.Let(M.StorageName,
+          TStoreInfo.GetID(M.GetValue(Obj).AsObject)))
     else
       LetExpr.Add(OQL.Let(M.StorageName, M.GetValue(Obj)))
   end;
   with OQL do
     Self.From<TObject>(Obj.ClassType).WHERE(EQ('ID', TStoreInfo.GetID(Obj)))
-      .UPDATE(LetExpr);
+        .UPDATE(LetExpr);
 end;
 
 procedure TDDOStore.SaveNew(Obj: TObject);
@@ -336,13 +354,13 @@ begin
   end;
   with OQL do
     Self.From<TObject>(Obj.ClassType).WHERE(EQ('ID', TStoreInfo.GetID(Obj)))
-      .INSERT(LetExpr);
+        .INSERT(LetExpr);
 end;
 
 { TCursorEnumerator }
 
 constructor TCursorEnumerator<T>.Create(Store: TDDOStore; Map: TMapper;
-  Reader: IStoreReader);
+    Reader: IStoreReader);
 begin
   FStore := Store;
   FMap := Map;
@@ -370,19 +388,20 @@ begin
   FReader.Reset;
 end;
 
-function TCursorEnumerator<T>.ReadStoredValue(Name: string): TValue;
+function TCursorEnumerator<T>.ReadStoredValue(name: string): TValue;
 begin
-  Result := FReader.ReadValue(Name);
+  Result := FReader.ReadValue(name);
 end;
 
 function TCursorEnumerator<T>.ReadPlainProp(Obj: TObject;
-  Prop: TPropMapper): TValue;
+    Prop: TPropMapper): TValue;
 begin
   Result := ReadStoredValue(Prop.StorageName);
   Prop.SetValue(Obj, Result);
 end;
 
-procedure TCursorEnumerator<T>.ReadReferenceProp(Obj: TObject; Prop: TPropMapper);
+procedure TCursorEnumerator<T>.ReadReferenceProp(Obj: TObject;
+    Prop: TPropMapper);
 var
   IDReferenced: TValue;
   ClassReferenced: TClass;
@@ -392,9 +411,11 @@ begin
 
   if IDReferenced.IsEmpty then
     Exit;
-//  Prop.RelatedClass ??
+
   ClassReferenced := TClass(TRttiInstanceType(Prop.Mapped.PropertyType)
-    .MetaclassType);
+      .MetaclassType);
+//  Assert(ClassReferenced = Prop.RelatedClass);
+
   Referenced := FStore.FindByID(ClassReferenced, IDReferenced);
 
   Prop.SetValue(Obj, Referenced);
@@ -404,26 +425,28 @@ function TCursorEnumerator<T>.ReadObject: TObject;
 var
   M: TPropMapper;
 begin
-  if FStore.GetFromCache(FMap.ForClass, ReadStoredValue(FMap['ID'].StorageName),
-    Result) then
-    Exit;
+  FStore.GetFromCache(FMap.ForClass, ReadStoredValue(FMap['ID'].StorageName), Result);
 
-  FMap['ID'].SetValue(Result, ReadStoredValue(FMap['ID'].StorageName));
-
-  for M in FMap do begin
-    if not M.IsStored(Result) then
-      Continue;
-
-    if M.IsRelation then
-      FMap.LazzyLoadBy(TLazzyLoader.Create(Result, M, FStore))
-    else if M.IsReference then
-      ReadReferenceProp(Result, M)
-    else if M.IsPlain then
-      ReadPlainProp(Result, M)
+  if TStoreInfo.GetReadGroup(Result) < 0 then begin
+    FMap['ID'].SetValue(Result, ReadStoredValue(FMap['ID'].StorageName));
+    TStoreInfo.MakeStoredClean(Result);
+    FMap.Proxify(Result);
+    TStoreInfo.SetReadGroup(Result, 0);
   end;
+  if TStoreInfo.GetReadGroup(Result) < 2 then begin
+    for M in FMap do begin
+      if not M.IsStored(Result) then
+        Continue;
 
-  TStoreInfo.MakeStoredClean(Result);
-  FMap.Proxify(Result);
+      if M.IsRelation then
+        FMap.LazzyLoadBy(TLazzyLoader.Create(Result, M, FStore))
+      else if M.IsReference then
+        ReadReferenceProp(Result, M)
+      else if M.IsPlain then
+        ReadPlainProp(Result, M)
+    end;
+    TStoreInfo.SetReadGroup(Result, 2);
+  end;
 end;
 
 end.
