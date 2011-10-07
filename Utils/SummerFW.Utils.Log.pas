@@ -532,7 +532,6 @@ initialization
   Logger.HistoryEnabled := True;
   Logger.FHistory :=  TLog.History.Create;
   Logger.FWriters := TLog.Writers.Create;
-
 finalization
   Logger.Free;
 end.

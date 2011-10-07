@@ -26,14 +26,16 @@ package SummerFW.Utils;
 
 requires
   rtl,
-  vcl;
+  vcl,
+  dbrtl;
 
 contains
   SummerFW.Utils.Binders in 'SummerFW.Utils.Binders.pas',
   SummerFW.Utils.Collections in 'SummerFW.Utils.Collections.pas',
   SummerFW.Utils.RTL in 'SummerFW.Utils.RTL.pas',
   SummerFW.Utils.CLI in 'SummerFW.Utils.CLI.pas',
-  SummerFW.Utils.Log in 'SummerFW.Utils.Log.pas';
+  SummerFW.Utils.Log in 'SummerFW.Utils.Log.pas',
+  SummerFW.Utils.Rules in 'SummerFW.Utils.Rules.pas';
 
 end.
 

@@ -4,6 +4,24 @@ interface
 uses SysUtils, Classes, Controls;
 
 type
+  TEnumerated = record
+  strict private
+    FCode: Integer;
+    FID: string;
+  public
+    class operator Equal(A: TEnumerated; B: TEnumerated): Boolean;
+    class operator NotEqual(A: TEnumerated; B: TEnumerated): Boolean;
+    class operator GreaterThan(A: TEnumerated; B: TEnumerated): Boolean;
+    class operator GreaterThanOrEqual(A: TEnumerated; B: TEnumerated): Boolean;
+    class operator LessThan(A: TEnumerated; B: TEnumerated): Boolean;
+    class operator LessThanOrEqual(A: TEnumerated; B: TEnumerated): Boolean;
+    class operator Implicit(Enum: TEnumerated): string;
+    class operator Implicit(Enum: TEnumerated): Integer;
+    function ToString: string;
+    property Code: Integer read FCode;
+    property ID: string read FID;
+  end;
+
   Sync = class
   public
     class procedure Lock(obj: TObject; P: TProc);overload;static;
@@ -27,10 +45,8 @@ type
     destructor Destroy; override;
   end;
 
-  DynA = class
-    class function From<T>(Items: array of T): TArray<T>;
-  end;
 
+function &Set(Values: array of TEnumerated): TIntegerSet;
 function InterlockedIncrement(var Addend: Integer): Integer;
 function InterlockedDecrement(var Addend: Integer): Integer;
 
@@ -94,17 +110,60 @@ begin
   inherited;
 end;
 
-class function DynA.From<T>(Items: array of T): TArray<T>;
-var
-  idx: Integer;
-  x: T;
+{ TEnumerated}
+
+class operator TEnumerated.Equal(A, B: TEnumerated): Boolean;
 begin
-  Setlength(Result, Length(Items));
-  idx := 0;
-  for x in Items do begin
-    Result[idx] := Items[idx];
-    Inc(idx);
-  end;
+  Result := A.FCode = B.FCode;
+end;
+
+class operator TEnumerated.NotEqual(A, B: TEnumerated): Boolean;
+begin
+  Result := A.FCode <> B.FCode;
+end;
+
+function TEnumerated.ToString: string;
+begin
+  Result := FID;
+end;
+
+class operator TEnumerated.GreaterThan(A, B: TEnumerated): Boolean;
+begin
+  Result := A.FCode > B.FCode;
+end;
+
+class operator TEnumerated.GreaterThanOrEqual(A, B: TEnumerated): Boolean;
+begin
+  Result := A.FCode >= B.FCode;
+end;
+
+class operator TEnumerated.LessThan(A, B: TEnumerated): Boolean;
+begin
+  Result := A.FCode < B.FCode;
+end;
+
+class operator TEnumerated.LessThanOrEqual(A, B: TEnumerated): Boolean;
+begin
+  Result := A.FCode <= B.FCode;
+end;
+
+class operator TEnumerated.Implicit(Enum: TEnumerated): Integer;
+begin
+  Result := Enum.FCode;
+end;
+
+class operator TEnumerated.Implicit(Enum: TEnumerated): string;
+begin
+  Result := Enum.ToString;
+end;
+
+function &Set(Values: array of TEnumerated): TIntegerSet;
+var
+  V: TEnumerated;
+begin
+  Result := [];
+  for V in Values do
+    Include(Result, Ord(V));
 end;
 
 end.
