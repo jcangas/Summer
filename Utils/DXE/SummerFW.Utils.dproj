@@ -2,13 +2,15 @@
 		<PropertyGroup>
 			<ProjectGuid>{8DA557C9-B34A-49F8-B83F-450BBF745D02}</ProjectGuid>
 			<MainSource>SummerFW.Utils.dpk</MainSource>
-			<ProjectVersion>12.3</ProjectVersion>
+			<ProjectVersion>13.4</ProjectVersion>
 			<Base>True</Base>
 			<Config Condition="'$(Config)'==''">Debug</Config>
-			<Platform>Win32</Platform>
 			<AppType>Package</AppType>
 			<FrameworkType>VCL</FrameworkType>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+			<Platform Condition="'$(Platform)'==''">Win32</Platform>
+			<TargetedPlatforms>1</TargetedPlatforms>
+			<Platform>Win32</Platform>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
 			<Base>true</Base>
@@ -18,27 +20,43 @@
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Platform)'=='Win32' and '$(Cfg_1)'=='true' or '$(Cfg_1_Win32)'!=''">
+			<Cfg_1_Win32>true</Cfg_1_Win32>
+			<CfgParent>Cfg_1</CfgParent>
+			<Cfg_1>true</Cfg_1>
+			<Base>true</Base>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
 			<Cfg_2>true</Cfg_2>
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
-		<Import Condition="'$(Base)'!='' And Exists('..\SummerFW.optset')" Project="..\SummerFW.optset"/>
+		<Import Condition="'$(Base)'!='' And Exists('..\..\SummerFW.optset')" Project="..\..\SummerFW.optset"/>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DllSuffix>150</DllSuffix>
+			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+			<VerInfo_Locale>3082</VerInfo_Locale>
+			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
 			<GenPackage>true</GenPackage>
-			<DCC_CBuilderOutput>All</DCC_CBuilderOutput>
+			<DCC_CBuilderOutput>None</DCC_CBuilderOutput>
 			<DCC_E>false</DCC_E>
 			<DCC_S>false</DCC_S>
 			<GenDll>true</GenDll>
 			<DCC_N>false</DCC_N>
 			<DCC_F>false</DCC_F>
 			<DCC_K>false</DCC_K>
-			<CfgDependentOn>..\SummerFW.optset</CfgDependentOn>
+			<CfgDependentOn>..\..\SummerFW.optset</CfgDependentOn>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -53,19 +71,19 @@
 			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="dbrtl.dcp"/>
-			<DCCReference Include="SummerFW.Utils.Binders.pas"/>
-			<DCCReference Include="SummerFW.Utils.Collections.pas"/>
-			<DCCReference Include="SummerFW.Utils.RTL.pas"/>
-			<DCCReference Include="SummerFW.Utils.CLI.pas"/>
-			<DCCReference Include="SummerFW.Utils.Log.pas"/>
-			<DCCReference Include="SummerFW.Utils.Rules.pas"/>
+			<DCCReference Include="..\SummerFW.Utils.Binders.pas"/>
+			<DCCReference Include="..\SummerFW.Utils.Collections.pas"/>
+			<DCCReference Include="..\SummerFW.Utils.RTL.pas"/>
+			<DCCReference Include="..\SummerFW.Utils.CLI.pas"/>
+			<DCCReference Include="..\SummerFW.Utils.Log.pas"/>
+			<DCCReference Include="..\SummerFW.Utils.Rules.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
 			</BuildConfiguration>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
-				<DependentOn>..\SummerFW.optset</DependentOn>
+				<DependentOn>..\..\SummerFW.optset</DependentOn>
 			</BuildConfiguration>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_1</Key>
@@ -94,7 +112,7 @@
 						<VersionInfo Name="Special">False</VersionInfo>
 						<VersionInfo Name="Private">False</VersionInfo>
 						<VersionInfo Name="DLL">False</VersionInfo>
-						<VersionInfo Name="Locale">3082</VersionInfo>
+						<VersionInfo Name="Locale">1033</VersionInfo>
 						<VersionInfo Name="CodePage">1252</VersionInfo>
 					</VersionInfo>
 					<VersionInfoKeys>
@@ -109,8 +127,15 @@
 						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
+					<Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\bcboffice2k150.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\bcbofficexp150.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k150.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\dclofficexp150.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+					</Excluded_Packages>
 				</Delphi.Personality>
 				<Platforms>
+					<Platform value="Win64">False</Platform>
 					<Platform value="Win32">True</Platform>
 				</Platforms>
 			</BorlandProject>

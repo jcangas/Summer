@@ -30,6 +30,7 @@ type
 
   TUnprotectControl = class(Controls.TControl)
   public
+    property Color;
     property Caption;
     property Text;
   end;

@@ -554,7 +554,6 @@ var
   Ident: string;
   idxIdent: Integer;
   p: Integer;
-  stop: Boolean;
 begin
   Result := '';
   FirstIdent := TypInfo.GetEnumName(TypeInfo, 0);
@@ -573,19 +572,12 @@ function TComboBoxBinder.GetTargetValue: TValue;
 var
   Prop: TRttiInstanceProperty;
   RType: TRttiType;
-  idx: Integer;
-  FirstValueStr: string;
-  ValueStr: string;
-  prefix: string;
-  p: Integer;
-  stop: Boolean;
 begin
   Prop := (Context as TRttiInstanceProperty);
   RType := Prop.PropertyType;
   if (RType is TRttiEnumerationType) then begin
     Result :=
     TValue.FromOrdinal(RType.Handle, GetEnumValue(RType.Handle, TUnprotectControl(Client).Text))
-
   end
   else
     Result := TUnprotectControl(Client).Text;

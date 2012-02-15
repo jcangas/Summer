@@ -523,7 +523,7 @@ end;
 
 procedure TTextFileLogWriter.DoWriteText(Text: string);
 begin
-  TFile.AppendAllText(Filename, Text);
+  TFile.AppendAllText(Filename, Text + sLineBreak);
 end;
 
 initialization

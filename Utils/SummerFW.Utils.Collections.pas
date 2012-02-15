@@ -2,6 +2,7 @@ unit SummerFW.Utils.Collections;
 
 interface
 uses
+  TypInfo,
   Generics.Defaults,
   Generics.Collections,
   SummerFW.Utils.RTL;
@@ -54,7 +55,7 @@ type
     function BinarySearch(const Item: T; out Index: Integer; const AComparer: IComparer<T>): Boolean; overload;
 
     procedure TrimExcess;
-
+    function ItemType: PTypeInfo;
     function ToArray: TArray<T>;
     property Capacity: Integer read GetCapacity write SetCapacity;
     property Count: Integer read GetCount write SetCount;
@@ -64,17 +65,17 @@ type
   IObjectList = IList<TObject>;
 
 
-  TInterfacedEnumerator = class(TInterfacedObject, IEnumerator)
+  TInterfacedEnumerator = class abstract(TInterfacedObject, IEnumerator)
   protected
-    function DoGetCurrent: TObject;virtual; abstract;
+    function DoGetCurrent: TObject;virtual;
     function IEnumerator.GetCurrent = DoGetCurrent;
     function MoveNext: Boolean; virtual; abstract;
     procedure Reset; virtual; abstract;
   end;
 
-  TInterfacedEnumerator<T> = class(TInterfacedEnumerator, IEnumerator<T>)
+  TInterfacedEnumerator<T> = class abstract(TInterfacedEnumerator, IEnumerator<T>)
   protected
-    function GetCurrent: T;
+    function GetCurrent: T;virtual;abstract;
   end;
 
   TInterfacedEnumerableList<T> = class(Generics.Collections.TList<T>, IEnumerable)
@@ -83,6 +84,7 @@ type
   protected
     function DoPlainEnumerator: IEnumerator;virtual;
   public
+    function ItemType: PTypeInfo;
     function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
@@ -97,9 +99,8 @@ type
       private
         FList: Generics.Collections.TList<T>;
         FIndex: Integer;
-        function GetCurrent: T;
       protected
-        function DoGetCurrent: TObject; override;
+        function GetCurrent: T;override;
       public
         constructor Create(AList: Generics.Collections.TList<T>);
         property Current: T read GetCurrent;
@@ -123,6 +124,7 @@ type
   end;
 
   TObjectList<T: class> = class(Generics.Collections.TObjectList<T>);
+  //TObjectList<T: class> = class(TList<T>);
 
   TObjectList = TObjectList<TObject>;
 
@@ -176,12 +178,17 @@ end;
 
 function TInterfacedEnumerableList<T>.DoPlainEnumerator: IEnumerator;
 begin
-  raise Exception.Create('Not Implemented');
+  Result := Self.GetEnumerator;
 end;
 
 function TInterfacedEnumerableList<T>.GetEnumerator: IEnumerator<T>;
 begin
   Result := TInterfacedEnumerableList<T>.TEnumerator.Create(Self);
+end;
+
+function TInterfacedEnumerableList<T>.ItemType: PTypeInfo;
+begin
+  Result := TypeInfo(T);
 end;
 
 function TInterfacedEnumerableList<T>._AddRef: Integer;
@@ -256,11 +263,6 @@ end;
 
 { TInterfacedEnumerator<T> }
 
-function TInterfacedEnumerator<T>.GetCurrent: T;
-begin
-  Result := T(DoGetCurrent);
-end;
-
 { TEnumerableList<T>.TEnumerator }
 
 constructor TInterfacedEnumerableList<T>.TEnumerator.Create(AList: Generics.Collections.TList<T>);
@@ -268,11 +270,6 @@ begin
   inherited Create;
   FList := AList;
   FIndex := -1;
-end;
-
-function TInterfacedEnumerableList<T>.TEnumerator.DoGetCurrent: TObject;
-begin
-  Result := TObject(GetCurrent);
 end;
 
 function TInterfacedEnumerableList<T>.TEnumerator.GetCurrent: T;
@@ -312,6 +309,13 @@ constructor TObjectDictionary<TKey, TValue>.Create(
   const AComparer: IEqualityComparer<TKey>);
 begin
   inherited Create( Generics.Collections.TDictionaryOwnerships(Ownerships), ACapacity, AComparer);
+end;
+
+{ TInterfacedEnumerator }
+
+function TInterfacedEnumerator.DoGetCurrent: TObject;
+begin
+  raise Exception.Create('Not Implemented');
 end;
 
 end.

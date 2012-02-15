@@ -22,6 +22,8 @@ package SummerFW.DDO;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
+{$LIBSUFFIX '150'}
+{$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
@@ -33,12 +35,12 @@ requires
   SummerFW.Utils;
 
 contains
-  SummerFW.DDO.CallBack in 'SummerFW.DDO.CallBack.pas',
-  SummerFW.DDO.DBXDriver in 'SummerFW.DDO.DBXDriver.pas',
-  SummerFW.DDO.Mappers in 'SummerFW.DDO.Mappers.pas',
-  SummerFW.DDO.OQL in 'SummerFW.DDO.OQL.pas',
-  SummerFW.DDO.State in 'SummerFW.DDO.State.pas',
-  SummerFW.DDO.Store in 'SummerFW.DDO.Store.pas',
-  SummerFW.DDO.StoreInfo in 'SummerFW.DDO.StoreInfo.pas';
+  SummerFW.DDO.CallBack in '..\SummerFW.DDO.CallBack.pas',
+  SummerFW.DDO.DBXDriver in '..\SummerFW.DDO.DBXDriver.pas',
+  SummerFW.DDO.Mappers in '..\SummerFW.DDO.Mappers.pas',
+  SummerFW.DDO.OQL in '..\SummerFW.DDO.OQL.pas',
+  SummerFW.DDO.State in '..\SummerFW.DDO.State.pas',
+  SummerFW.DDO.Store in '..\SummerFW.DDO.Store.pas',
+  SummerFW.DDO.StoreInfo in '..\SummerFW.DDO.StoreInfo.pas';
 
 end.
