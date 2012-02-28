@@ -4,11 +4,11 @@
 			<DCC_CBuilderOutput>All</DCC_CBuilderOutput>
 			<DCC_DefaultNamespace>SummerFW</DCC_DefaultNamespace>
 			<DCC_NameSpace>SummerFW</DCC_NameSpace>
-			<DCC_BplOutput>$(BDSPROJECTGROUPDIR)\out\$(Config)\bin</DCC_BplOutput>
-			<DCC_UnitSearchPath>$(BDSPROJECTGROUPDIR)\out\$(Config)\lib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_BplOutput>$(BDSPROJECTGROUPDIR)\out\$(IDEVersion)\$(Config)\bin</DCC_BplOutput>
+			<DCC_UnitSearchPath>$(BDSPROJECTGROUPDIR)\out\$(IDEVersion)\$(Config)\lib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
-			<DCC_DcpOutput>$(BDSPROJECTGROUPDIR)\out\$(Config)\lib</DCC_DcpOutput>
-			<DCC_DcuOutput>$(BDSPROJECTGROUPDIR)\out\$(Config)\lib</DCC_DcuOutput>
+			<DCC_DcpOutput>$(BDSPROJECTGROUPDIR)\out\$(IDEVersion)\$(Config)\lib</DCC_DcpOutput>
+			<DCC_DcuOutput>$(BDSPROJECTGROUPDIR)\out\$(IDEVersion)\$(Config)\lib</DCC_DcuOutput>
 		</PropertyGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>

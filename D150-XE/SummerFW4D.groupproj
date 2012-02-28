@@ -3,10 +3,10 @@
 			<ProjectGuid>{E4702CE9-CE38-491A-8E41-9DA13AE1BB43}</ProjectGuid>
 		</PropertyGroup>
 		<ItemGroup>
-			<Projects Include="Utils\DXE\SummerFW.Utils.dproj">
+			<Projects Include="..\Utils\D150-XE\SummerFW.Utils.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="DDO\DXE\SummerFW.DDO.dproj">
+			<Projects Include="..\DDO\D150-XE\SummerFW.DDO.dproj">
 				<Dependencies/>
 			</Projects>
 		</ItemGroup>
@@ -18,22 +18,22 @@
 			</BorlandProject>
 		</ProjectExtensions>
 		<Target Name="SummerFW_Utils">
-			<MSBuild Projects="Utils\DXE\SummerFW.Utils.dproj"/>
+			<MSBuild Projects="..\Utils\D150-XE\SummerFW.Utils.dproj"/>
 		</Target>
 		<Target Name="SummerFW_Utils:Clean">
-			<MSBuild Projects="Utils\DXE\SummerFW.Utils.dproj" Targets="Clean"/>
+			<MSBuild Projects="..\Utils\D150-XE\SummerFW.Utils.dproj" Targets="Clean"/>
 		</Target>
 		<Target Name="SummerFW_Utils:Make">
-			<MSBuild Projects="Utils\DXE\SummerFW.Utils.dproj" Targets="Make"/>
+			<MSBuild Projects="..\Utils\D150-XE\SummerFW.Utils.dproj" Targets="Make"/>
 		</Target>
 		<Target Name="SummerFW_DDO">
-			<MSBuild Projects="DDO\DXE\SummerFW.DDO.dproj"/>
+			<MSBuild Projects="..\DDO\D150-XE\SummerFW.DDO.dproj"/>
 		</Target>
 		<Target Name="SummerFW_DDO:Clean">
-			<MSBuild Projects="DDO\DXE\SummerFW.DDO.dproj" Targets="Clean"/>
+			<MSBuild Projects="..\DDO\D150-XE\SummerFW.DDO.dproj" Targets="Clean"/>
 		</Target>
 		<Target Name="SummerFW_DDO:Make">
-			<MSBuild Projects="DDO\DXE\SummerFW.DDO.dproj" Targets="Make"/>
+			<MSBuild Projects="..\DDO\D150-XE\SummerFW.DDO.dproj" Targets="Make"/>
 		</Target>
 		<Target Name="Build">
 			<CallTarget Targets="SummerFW_Utils;SummerFW_DDO"/>

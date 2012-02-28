@@ -1,4 +1,4 @@
-{ 
+{
   Summer Framework for Delphi http://github.com/jcangas/SummerFW4D
   SummerFW4D by Jorge L. Cangas <jorge.cangas@gmail.com>
   SummerFW4D - Copyright(c) Jorge L. Cangas, Some rights reserved.
@@ -87,18 +87,27 @@ type
   end;
 
   TLogger = class
+  type Childs = TDictionary<string, TLogger>;
   private
   var
     FWriters: TLog.Writers;
     FHistory: TLog.History;
     FLevel: TLog.Level;
+    FLevelAssigned: Boolean;
     FHistoryEnabled: Boolean;
+    FChilds: TLogger.Childs;
+    FParent: TLogger;
+    function GetLevel: TLog.Level;
+    procedure SetLevel(const Value: TLog.Level);
   protected
     procedure Log(RequestedLevel: TLog.Level; Msg: string);
+    function GetChild(Name: string): TLogger;
   public
-    class function GetLogger(Category: string): TLogger;
+    class function GetRootLogger: TLogger;
+    class function GetLogger(Name: string): TLogger;
+    constructor Create(AParent: TLogger);
     destructor Destroy;override;
-    property Level: TLog.Level read FLevel write FLevel;
+    property Level: TLog.Level read GetLevel write SetLevel;
     procedure AddWriter(W: TLog.Writer);
     procedure RemoveWriter(W: TLog.Writer);
     procedure ExtractWriter(W: TLog.Writer);
@@ -119,6 +128,7 @@ type
     procedure Fatal(Fmt: string; Args: array of const ); overload;
   end;
 
+  {$REGION 'Abstract Writers'}
   TWriteTextLogWriter = class(TLog.Writer)
   protected
     procedure DoWriteText(Text: string); virtual;abstract;
@@ -136,6 +146,7 @@ type
     constructor Create(AWriterProc: TTextProc; FormatterClass: TLog.FormatterClass = nil);
     property WriterProc: TTextProc read FWriterProc write FWriterProc;
   end;
+  {$ENDREGION}
 
   TTextFileLogWriter = class(TWriteTextLogWriter)
   private
@@ -187,7 +198,7 @@ var
 implementation
 
 uses
-  IOUtils, Windows;
+  RTLConsts, IOUtils, Windows;
 
 { TLog.Level }
 
@@ -348,6 +359,18 @@ begin
   end;
 end;
 
+function TLogger.GetLevel: TLog.Level;
+begin
+  if FLevelAssigned then Exit(FLevel);
+  Result := FParent.Level;
+end;
+
+procedure TLogger.SetLevel(const Value: TLog.Level);
+begin
+  FLevel := Value;
+  FLevelAssigned := True;
+end;
+
 procedure TLogger.Debug(Msg: string);
 begin
   Log(TLog.Debug, Msg);
@@ -358,10 +381,18 @@ begin
   Debug(Format(Fmt, Args));
 end;
 
+constructor TLogger.Create(AParent: TLogger);
+begin
+  inherited Create;
+  FParent := AParent;
+  FChilds := Childs.Create;
+end;
+
 destructor TLogger.Destroy;
 begin
   FWriters.Free;
   FHistory.Free;
+  FChilds.Free;
   inherited;
 end;
 
@@ -415,7 +446,36 @@ begin
   Fatal(Format(Fmt, Args));
 end;
 
-class function TLogger.GetLogger(Category: string): TLogger;
+function TLogger.GetChild(Name: string): TLogger;
+var
+  DotIdx: Integer;
+  ChildName: string;
+  ChildTail: string;
+begin
+  Name := Name + '.';
+  DotIdx := Pos('.', Name);
+  ChildName := Copy(Name, 1, DotIdx - 1);
+  if ChildName = '' then Exit(nil);
+  ChildTail := Copy(Name, DotIdx + 1, Length(Name) - 1);
+
+  if not FChilds.TryGetValue(ChildName, Result) then begin
+    FChilds[ChildName] := TLogger.Create(Self);
+    Result := FChilds[ChildName];
+  end;
+
+  if ChildTail <> '' then
+    Result := Result.GetChild(ChildTail);
+end;
+
+class function TLogger.GetLogger(Name: string): TLogger;
+begin
+  if Name = '' then
+    Result := GetRootLogger
+  else
+    Result := GetRootLogger.GetChild(Name);
+end;
+
+class function TLogger.GetRootLogger: TLogger;
 begin
   Result := Logger;
 end;
@@ -433,12 +493,13 @@ constructor TTextProcLogWriter.Create(AWriterProc: TTextProc; FormatterClass: TL
 begin
   inherited Create(FormatterClass);
   FWriterProc := AWriterProc;
+  if not Assigned(FWriterProc) then
+    raise EArgumentNilException.Create('AWriterProc: ' + SArgumentNil);
 end;
 
 procedure TTextProcLogWriter.DoWriteText(Text: string);
 begin
-  if Assigned(FWriterProc) then
-    FWriterProc(Text);
+  FWriterProc(Text);
 end;
 
 { TStringsLogger }
@@ -488,9 +549,9 @@ procedure TWindowsEventLogWriter.DoGetWindowsEventInfo(Event: TLog.Event;
   out WinEventType: Word; out WinEventCategory: Word);
 begin
   WinEventCategory := 0;
-  if Event.Level = TLog.Debug then
+  if Event.Level = TLog.Trace then
     WinEventType := EVENTLOG_AUDIT_SUCCESS
-  else if Event.Level = TLog.Trace then
+  else if Event.Level = TLog.Debug then
     WinEventType := EVENTLOG_AUDIT_SUCCESS
   else if Event.Level = TLog.Warn then
     WinEventType := EVENTLOG_WARNING_TYPE
@@ -537,7 +598,7 @@ begin
 end;
 
 initialization
-  Logger := TLogger.Create;
+  Logger := TLogger.Create(nil);
   Logger.Level := TLog.Info;
   Logger.HistoryEnabled := True;
   Logger.FHistory :=  TLog.History.Create;
