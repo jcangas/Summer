@@ -1,12 +1,22 @@
+{ 
+  Summer Framework for Delphi http://github.com/jcangas/SummerFW4D
+  SummerFW4D by Jorge L. Cangas <jorge.cangas@gmail.com>
+  SummerFW4D - Copyright(c) Jorge L. Cangas, Some rights reserved.
+  Your reuse is governed by the Creative Commons Attribution 3.0 License
+}
+
+
+/// A logging service totally inspired by Log4J http://logging.apache.org/log4j/1.2/
+
 unit SummerFW.Utils.Log;
 
 interface
 
 uses
-  Classes, SysUtils, SummerFW.Utils.Collections;
+  Classes, SysUtils,
+  Generics.Collections;
 
 type
-
   TLog = class
   type
     Formatter = class;
@@ -84,7 +94,7 @@ type
     FLevel: TLog.Level;
     FHistoryEnabled: Boolean;
   protected
-    procedure Write(RequestedLevel: TLog.Level; Msg: string);
+    procedure Log(RequestedLevel: TLog.Level; Msg: string);
   public
     class function GetLogger(Category: string): TLogger;
     destructor Destroy;override;
@@ -303,7 +313,7 @@ begin
   FWriters.Extract(W);
 end;
 
-procedure TLogger.Write(RequestedLevel: TLog.Level; Msg: string);
+procedure TLogger.Log(RequestedLevel: TLog.Level; Msg: string);
 var
   Writer: TLog.Writer;
   CurrentEvent: TLog.Event;
@@ -340,7 +350,7 @@ end;
 
 procedure TLogger.Debug(Msg: string);
 begin
-  Write(TLog.Debug, Msg);
+  Log(TLog.Debug, Msg);
 end;
 
 procedure TLogger.Debug(Fmt: string; Args: array of const );
@@ -357,7 +367,7 @@ end;
 
 procedure TLogger.Trace(Msg: string);
 begin
-  Write(TLog.Trace, Msg);
+  Log(TLog.Trace, Msg);
 end;
 
 procedure TLogger.Trace(Fmt: string; Args: array of const );
@@ -367,7 +377,7 @@ end;
 
 procedure TLogger.Info(Msg: string);
 begin
-  Write(TLog.Info, Msg);
+  Log(TLog.Info, Msg);
 end;
 
 procedure TLogger.Info(Fmt: string; Args: array of const );
@@ -377,7 +387,7 @@ end;
 
 procedure TLogger.Warn(Msg: string);
 begin
-  Write(TLog.Warn, Msg);
+  Log(TLog.Warn, Msg);
 end;
 
 procedure TLogger.Warn(Fmt: string; Args: array of const );
@@ -387,7 +397,7 @@ end;
 
 procedure TLogger.Error(Msg: string);
 begin
-  Write(TLog.Error, Msg);
+  Log(TLog.Error, Msg);
 end;
 
 procedure TLogger.Error(Fmt: string; Args: array of const );
@@ -397,7 +407,7 @@ end;
 
 procedure TLogger.Fatal(Msg: string);
 begin
-  Write(TLog.Fatal, Msg);
+  Log(TLog.Fatal, Msg);
 end;
 
 procedure TLogger.Fatal(Fmt: string; Args: array of const );
