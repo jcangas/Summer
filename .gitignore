@@ -6,3 +6,8 @@ __history
 *.dsk
 *.bak
 *.~*
+
+/assets
+/_site
+/_includes
+/.DS_Store
