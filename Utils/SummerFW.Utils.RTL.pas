@@ -11,21 +11,26 @@ interface
 uses SysUtils, Classes, Controls;
 
 type
-  TEnumerated = record
-  strict private
-    FCode: Integer;
+  TOpenEnum = record
+  type
+    Code = Integer;
+    CodeSet = array of Code;
+  public  // So we can declare initialized const
+    FValue: Code;
     FID: string;
   public
-    class operator Equal(A: TEnumerated; B: TEnumerated): Boolean;
-    class operator NotEqual(A: TEnumerated; B: TEnumerated): Boolean;
-    class operator GreaterThan(A: TEnumerated; B: TEnumerated): Boolean;
-    class operator GreaterThanOrEqual(A: TEnumerated; B: TEnumerated): Boolean;
-    class operator LessThan(A: TEnumerated; B: TEnumerated): Boolean;
-    class operator LessThanOrEqual(A: TEnumerated; B: TEnumerated): Boolean;
-    class operator Implicit(Enum: TEnumerated): string;
-    class operator Implicit(Enum: TEnumerated): Integer;
+    constructor Create(AValue: Code; AID: string);
+    class operator Equal(A: TOpenEnum; B: TOpenEnum): Boolean;
+    class operator NotEqual(A: TOpenEnum; B: TOpenEnum): Boolean;
+    class operator GreaterThan(A: TOpenEnum; B: TOpenEnum): Boolean;
+    class operator GreaterThanOrEqual(A: TOpenEnum; B: TOpenEnum): Boolean;
+    class operator LessThan(A: TOpenEnum; B: TOpenEnum): Boolean;
+    class operator LessThanOrEqual(A: TOpenEnum; B: TOpenEnum): Boolean;
+    class operator Implicit(Enum: TOpenEnum): string;
+    class operator Implicit(Enum: TOpenEnum): Integer;
     function ToString: string;
-    property Code: Integer read FCode;
+    function MemberOf(Codes: CodeSet): Boolean;
+    property Value: Code read FValue;
     property ID: string read FID;
   end;
 
@@ -54,7 +59,7 @@ type
   end;
 
 
-function &Set(Values: array of TEnumerated): TIntegerSet;
+function &Set(Values: array of TOpenEnum): TIntegerSet;
 function InterlockedIncrement(var Addend: Integer): Integer;
 function InterlockedDecrement(var Addend: Integer): Integer;
 
@@ -120,54 +125,68 @@ end;
 
 { TEnumerated}
 
-class operator TEnumerated.Equal(A, B: TEnumerated): Boolean;
+constructor TOpenEnum.Create(AValue: TOpenEnum.Code; AID: string);
 begin
-  Result := A.FCode = B.FCode;
+  FValue := AValue;
+  FID := AID;
 end;
 
-class operator TEnumerated.NotEqual(A, B: TEnumerated): Boolean;
+class operator TOpenEnum.Equal(A, B: TOpenEnum): Boolean;
 begin
-  Result := A.FCode <> B.FCode;
+  Result := A.FValue = B.FValue;
 end;
 
-function TEnumerated.ToString: string;
+class operator TOpenEnum.NotEqual(A, B: TOpenEnum): Boolean;
+begin
+  Result := A.FValue <> B.FValue;
+end;
+
+function TOpenEnum.ToString: string;
 begin
   Result := FID;
 end;
 
-class operator TEnumerated.GreaterThan(A, B: TEnumerated): Boolean;
+function TOpenEnum.MemberOf(Codes: TOpenEnum.CodeSet): Boolean;
+var
+  I: Integer;
 begin
-  Result := A.FCode > B.FCode;
+  for I := Low(Codes) to High(Codes) do
+    if (Value = Codes[I]) then Exit(True);
+  Result := False;
+end;
+class operator TOpenEnum.GreaterThan(A, B: TOpenEnum): Boolean;
+begin
+  Result := A.FValue > B.FValue;
 end;
 
-class operator TEnumerated.GreaterThanOrEqual(A, B: TEnumerated): Boolean;
+class operator TOpenEnum.GreaterThanOrEqual(A, B: TOpenEnum): Boolean;
 begin
-  Result := A.FCode >= B.FCode;
+  Result := A.FValue >= B.FValue;
 end;
 
-class operator TEnumerated.LessThan(A, B: TEnumerated): Boolean;
+class operator TOpenEnum.LessThan(A, B: TOpenEnum): Boolean;
 begin
-  Result := A.FCode < B.FCode;
+  Result := A.FValue < B.FValue;
 end;
 
-class operator TEnumerated.LessThanOrEqual(A, B: TEnumerated): Boolean;
+class operator TOpenEnum.LessThanOrEqual(A, B: TOpenEnum): Boolean;
 begin
-  Result := A.FCode <= B.FCode;
+  Result := A.FValue <= B.FValue;
 end;
 
-class operator TEnumerated.Implicit(Enum: TEnumerated): Integer;
+class operator TOpenEnum.Implicit(Enum: TOpenEnum): Integer;
 begin
-  Result := Enum.FCode;
+  Result := Enum.FValue;
 end;
 
-class operator TEnumerated.Implicit(Enum: TEnumerated): string;
+class operator TOpenEnum.Implicit(Enum: TOpenEnum): string;
 begin
   Result := Enum.ToString;
 end;
 
-function &Set(Values: array of TEnumerated): TIntegerSet;
+function &Set(Values: array of TOpenEnum): TIntegerSet;
 var
-  V: TEnumerated;
+  V: TOpenEnum;
 begin
   Result := [];
   for V in Values do

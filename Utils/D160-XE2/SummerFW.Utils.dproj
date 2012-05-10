@@ -55,6 +55,7 @@
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+			<DCC_MinimumEnumSize>2</DCC_MinimumEnumSize>
 			<DllSuffix>160</DllSuffix>
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>

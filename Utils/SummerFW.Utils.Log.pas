@@ -14,29 +14,14 @@ interface
 
 uses
   Classes, SysUtils,
-  Generics.Collections;
+  Generics.Collections,
+  SummerFW.Utils.RTL;
 
 type
   TLog = class
   type
     Formatter = class;
-    Level = record
-    strict private
-      FCode: Integer;
-      FID: string;
-    public
-      class operator Equal(A: TLog.Level; B: TLog.Level): Boolean;
-      class operator NotEqual(A: TLog.Level; B: TLog.Level): Boolean;
-      class operator GreaterThan(A: TLog.Level; B: TLog.Level): Boolean;
-      class operator GreaterThanOrEqual(A: TLog.Level; B: TLog.Level): Boolean;
-      class operator LessThan(A: TLog.Level; B: TLog.Level): Boolean;
-      class operator LessThanOrEqual(A: TLog.Level; B: TLog.Level): Boolean;
-      class operator Implicit(A: TLog.Level): string;
-      function ToString: string;
-      property Code: Integer read FCode;
-      property ID: string read FID;
-    end;
-
+    Level = TOpenEnum;
     Event = class
     public
       TimeStamp: TDateTime;
@@ -76,14 +61,14 @@ type
     Writers = TObjectList<Writer>;
 
   public const
-    All: TLog.Level   = (FCode: low(Integer); FID: 'ALL');
-    Trace: TLog.Level = (FCode: 0; FID: 'TRACE');
-    Debug: TLog.Level = (FCode: 100; FID: 'DEBUG');
-    Info: TLog.Level  = (FCode: 200; FID: 'INFO');
-    Warn: TLog.Level  = (FCode: 300; FID: 'WARN');
-    Error: TLog.Level = (FCode: 400; FID: 'ERROR');
-    Fatal: TLog.Level = (FCode: 500; FID: 'FATAL');
-    Off: TLog.Level   = (FCode: high(Integer); FID: 'OFF');
+    All: TLog.Level   = (FValue: low(Integer); FID: 'ALL');
+    Trace: TLog.Level = (FValue: 0; FID: 'TRACE');
+    Debug: TLog.Level = (FValue: 100; FID: 'DEBUG');
+    Info: TLog.Level  = (FValue: 200; FID: 'INFO');
+    Warn: TLog.Level  = (FValue: 300; FID: 'WARN');
+    Error: TLog.Level = (FValue: 400; FID: 'ERROR');
+    Fatal: TLog.Level = (FValue: 500; FID: 'FATAL');
+    Off: TLog.Level   = (FValue: high(Integer); FID: 'OFF');
   end;
 
   TLogger = class
@@ -199,48 +184,6 @@ implementation
 
 uses
   RTLConsts, IOUtils, Windows;
-
-{ TLog.Level }
-
-class operator TLog.Level.Equal(A, B: TLog.Level): Boolean;
-begin
-  Result := A.FCode = B.FCode;
-end;
-
-class operator TLog.Level.NotEqual(A, B: TLog.Level): Boolean;
-begin
-  Result := A.FCode <> B.FCode;
-end;
-
-function TLog.Level.ToString: string;
-begin
-  Result := FID;
-end;
-
-class operator TLog.Level.GreaterThan(A, B: TLog.Level): Boolean;
-begin
-  Result := A.FCode > B.FCode;
-end;
-
-class operator TLog.Level.GreaterThanOrEqual(A, B: TLog.Level): Boolean;
-begin
-  Result := A.FCode >= B.FCode;
-end;
-
-class operator TLog.Level.Implicit(A: TLog.Level): string;
-begin
-  Result := A.ToString;
-end;
-
-class operator TLog.Level.LessThan(A, B: TLog.Level): Boolean;
-begin
-  Result := A.FCode < B.FCode;
-end;
-
-class operator TLog.Level.LessThanOrEqual(A, B: TLog.Level): Boolean;
-begin
-  Result := A.FCode <= B.FCode;
-end;
 
 { TLog.Formatter }
 
