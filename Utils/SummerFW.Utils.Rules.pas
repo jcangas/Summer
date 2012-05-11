@@ -8,18 +8,22 @@
 unit SummerFW.Utils.Rules;
 
 interface
-uses Classes,SysUtils,  Generics.Collections, RegularExpressions,
-  SummerFW.Utils.RTL;
+uses Classes,SysUtils,  Generics.Defaults, Generics.Collections,
+  RegularExpressions, SummerFW.Utils.RTL;
 
 type
-
   TRuleClass = class of TRule;
   TRule = class
   type
     TMatchKind = (mkRegExpr, mkString);
     Trigger = TOpenEnum;
     Trigers = Trigger.CodeSet;
+    TComparer = class(TComparer<TRule>)
+    public
+      function Compare(const Left, Right: TRule): Integer; override;
+    end;
   private
+    FOrder: Integer;
     FSubjectMask: string;
     FTriggers: Trigers;
     FErrorMessage: string;
@@ -28,14 +32,14 @@ type
     function GetErrorMessage(Target: TObject): string;virtual;
     function DoSatisfiedBy(Target: TObject): Boolean;virtual;abstract;
   public
-    constructor Create(SubjectMask: string; Triggers: Trigers; MatchKind: TMatchKind);
+    constructor Create(SubjectMask: string; Triggers: array of Trigger; MatchKind: TMatchKind);
     function Match(Subject: string; Trigger: Trigger): Boolean;
 
     procedure BeginUse(Target: TObject);virtual;
     function Enabled(Target: TObject): Boolean;virtual;
     function SatisfiedBy(Target: TObject): Boolean;
     procedure EndUse(Target: TObject);virtual;
-
+    property Order: Integer read FOrder;
     property ErrorMessage: string read FErrorMessage;
     property RuleName: string read GetRuleName;
     property SubjectMask: string read FSubjectMask;
@@ -66,10 +70,13 @@ type
     end;
   private
     FRegistry: TRegistry;
+    FRegistryDirty: Boolean;
+  protected
+    procedure CheckRegistryIsDirty;
   public
     constructor Create;
     destructor Destroy; override;
-    function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: TRule.Trigers; MatchKind: TRule.TMatchKind = mkRegExpr): TRuleEngine;
+    function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind = mkRegExpr): TRuleEngine;
     function Satisfy(Subject: string; ForTrigger: TRule.Trigger; ATarget: TObject; out Errors: TErrorInfos): Boolean;overload;
     function Satisfy(SubjectFmt: string; Args: array of const; ForTrigger: TRule.Trigger; ATarget: TObject; out Errors: TErrorInfos): Boolean;overload;
   end;
@@ -90,13 +97,13 @@ begin
 
 end;
 
-constructor TRule.Create(SubjectMask: string; Triggers: TRule.Trigers; MatchKind: TMatchKind);
+constructor TRule.Create(SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TMatchKind);
 begin
   inherited Create;
   if MatchKind = mkString then
     SubjectMask := TRegEx.Escape(SubjectMask);
-  FSubjectMask := SubjectMask;
-  FTriggers := Triggers;
+  FSubjectMask := '^' + SubjectMask + '$';
+  FTriggers := TOpenEnum.&Set(Triggers);
 end;
 
 function TRule.Enabled(Target: TObject): Boolean;
@@ -133,12 +140,19 @@ end;
 
 { TRuleEngine }
 
+function TRuleEngine.Satisfy(SubjectFmt: string; Args: array of const;
+  ForTrigger: TRule.Trigger; ATarget: TObject; out Errors: TErrorInfos): Boolean;
+begin
+  Result := Satisfy(Format(SubjectFmt, Args),ForTrigger, ATarget, Errors);
+end;
+
 function TRuleEngine.Satisfy(Subject: string; ForTrigger: TRule.Trigger; ATarget: TObject;
   out Errors: TErrorInfos): Boolean;
 var
   Rule: TRule;
 begin
   Errors := nil;
+  CheckRegistryIsDirty;
   for Rule in FRegistry do begin
     if not Rule.Match(Subject, ForTrigger) then Continue;
     try
@@ -155,6 +169,13 @@ begin
   Result := not Assigned(Errors);
 end;
 
+procedure TRuleEngine.CheckRegistryIsDirty;
+begin
+  if not FRegistryDirty then Exit;
+  FRegistry.Sort(TRule.TComparer.Create);
+  FRegistryDirty := False;
+end;
+
 constructor TRuleEngine.Create;
 begin
   inherited Create;
@@ -168,16 +189,11 @@ begin
 end;
 
 function TRuleEngine.Register(RuleClass: TRuleClass; SubjectMask: string;
-  Triggers: TRule.Trigers; MatchKind: TRule.TMatchKind): TRuleEngine;
+  Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind): TRuleEngine;
 begin
   Result := Self;
+  FRegistryDirty := True;
   FRegistry.Add(RuleClass.Create(SubjectMask, Triggers, MatchKind));
-end;
-
-function TRuleEngine.Satisfy(SubjectFmt: string; Args: array of const;
-  ForTrigger: TRule.Trigger; ATarget: TObject; out Errors: TErrorInfos): Boolean;
-begin
-  Result := Satisfy(Format(SubjectFmt, Args),ForTrigger, ATarget, Errors);
 end;
 
 { TRuleEngine.TRuleErrorInfo }
@@ -208,6 +224,13 @@ begin
     Result := ToString;
     Free;
   end;
+end;
+
+{ TRule.TComparer }
+
+function TRule.TComparer.Compare(const Left, Right: TRule): Integer;
+begin
+  Result := Left.Order - Right.Order;
 end;
 
 end.

@@ -15,11 +15,12 @@ type
   type
     Code = Integer;
     CodeSet = array of Code;
-  public  // So we can declare initialized const
+  public  // yes! in order we can declare as initialized const
     FValue: Code;
     FID: string;
   public
     constructor Create(AValue: Code; AID: string);
+    class function &Set(Values: array of TOpenEnum): CodeSet;static;
     class operator Equal(A: TOpenEnum; B: TOpenEnum): Boolean;
     class operator NotEqual(A: TOpenEnum; B: TOpenEnum): Boolean;
     class operator GreaterThan(A: TOpenEnum; B: TOpenEnum): Boolean;
@@ -58,8 +59,6 @@ type
     destructor Destroy; override;
   end;
 
-
-function &Set(Values: array of TOpenEnum): TIntegerSet;
 function InterlockedIncrement(var Addend: Integer): Integer;
 function InterlockedDecrement(var Addend: Integer): Integer;
 
@@ -125,6 +124,15 @@ end;
 
 { TEnumerated}
 
+class function TOpenEnum.&Set(Values: array of TOpenEnum): TOpenEnum.CodeSet;
+var
+  idx: Integer;
+begin
+  SetLength(Result, 1 + High(Values));
+  for idx := Low(Values) to High(Values) do
+    Result[idx] := Values[idx];
+end;
+
 constructor TOpenEnum.Create(AValue: TOpenEnum.Code; AID: string);
 begin
   FValue := AValue;
@@ -182,15 +190,6 @@ end;
 class operator TOpenEnum.Implicit(Enum: TOpenEnum): string;
 begin
   Result := Enum.ToString;
-end;
-
-function &Set(Values: array of TOpenEnum): TIntegerSet;
-var
-  V: TOpenEnum;
-begin
-  Result := [];
-  for V in Values do
-    Include(Result, Ord(V));
 end;
 
 end.
