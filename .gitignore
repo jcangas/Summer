@@ -6,7 +6,7 @@ __history
 *.dsk
 *.bak
 *.~*
-
+/ship
 /assets
 /_site
 /_includes

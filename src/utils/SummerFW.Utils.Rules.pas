@@ -32,7 +32,7 @@ type
     function GetErrorMessage(Target: TObject): string;virtual;
     function DoSatisfiedBy(Target: TObject): Boolean;virtual;abstract;
   public
-    constructor Create(SubjectMask: string; Triggers: array of Trigger; MatchKind: TMatchKind);
+    constructor Create(SubjectMask: string; Triggers: array of Trigger; MatchKind: TMatchKind;Order: Integer);
     function Match(Subject: string; Trigger: Trigger): Boolean;
 
     procedure BeginUse(Target: TObject);virtual;
@@ -76,7 +76,9 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind = mkRegExpr): TRuleEngine;
+    function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: array of TRule.Trigger; Order: Integer): TRuleEngine;overload;
+    function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind = mkRegExpr): TRuleEngine;overload;
+    function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind; Order: Integer): TRuleEngine;overload;
     function Satisfy(Subject: string; ForTrigger: TRule.Trigger; ATarget: TObject; out Errors: TErrorInfos): Boolean;overload;
     function Satisfy(SubjectFmt: string; Args: array of const; ForTrigger: TRule.Trigger; ATarget: TObject; out Errors: TErrorInfos): Boolean;overload;
   end;
@@ -97,13 +99,14 @@ begin
 
 end;
 
-constructor TRule.Create(SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TMatchKind);
+constructor TRule.Create(SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TMatchKind; Order: Integer);
 begin
   inherited Create;
   if MatchKind = mkString then
     SubjectMask := TRegEx.Escape(SubjectMask);
   FSubjectMask := '^' + SubjectMask + '$';
   FTriggers := TOpenEnum.&Set(Triggers);
+  FOrder := Order;
 end;
 
 function TRule.Enabled(Target: TObject): Boolean;
@@ -172,14 +175,14 @@ end;
 procedure TRuleEngine.CheckRegistryIsDirty;
 begin
   if not FRegistryDirty then Exit;
-  FRegistry.Sort(TRule.TComparer.Create);
+  FRegistry.Sort;
   FRegistryDirty := False;
 end;
 
 constructor TRuleEngine.Create;
 begin
   inherited Create;
-  FRegistry := TRegistry.Create(True);
+  FRegistry := TRegistry.Create(TRule.TComparer.Create, True);
 end;
 
 destructor TRuleEngine.Destroy;
@@ -189,11 +192,23 @@ begin
 end;
 
 function TRuleEngine.Register(RuleClass: TRuleClass; SubjectMask: string;
+  Triggers: array of TRule.Trigger; Order: Integer): TRuleEngine;
+begin
+  Result := Register(RuleClass, SubjectMask, Triggers, mkRegExpr, Order);
+end;
+
+function TRuleEngine.Register(RuleClass: TRuleClass; SubjectMask: string;
   Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind): TRuleEngine;
+begin
+  Result := Register(RuleClass, SubjectMask, Triggers, MatchKind, 0);
+end;
+
+function TRuleEngine.Register(RuleClass: TRuleClass; SubjectMask: string;
+  Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind; Order: Integer): TRuleEngine;
 begin
   Result := Self;
   FRegistryDirty := True;
-  FRegistry.Add(RuleClass.Create(SubjectMask, Triggers, MatchKind));
+  FRegistry.Add(RuleClass.Create(SubjectMask, Triggers, MatchKind, Order));
 end;
 
 { TRuleEngine.TRuleErrorInfo }
