@@ -18,6 +18,7 @@ type
     TMatchKind = (mkRegExpr, mkString);
     Trigger = TOpenEnum;
     Trigers = Trigger.CodeSet;
+    State = (rsFail, rsDisabled, rsSatisfied);
     TComparer = class(TComparer<TRule>)
     public
       function Compare(const Left, Right: TRule): Integer; override;
@@ -28,13 +29,13 @@ type
     FTriggers: Trigers;
     FErrorMessage: string;
   protected
+    FMatchedSubject: string;
     function GetRuleName: string;virtual;
     function GetErrorMessage(Target: TObject): string;virtual;
     function DoSatisfiedBy(Target: TObject): Boolean;virtual;abstract;
   public
     constructor Create(SubjectMask: string; Triggers: array of Trigger; MatchKind: TMatchKind;Order: Integer);
-    function Match(Subject: string; Trigger: Trigger): Boolean;
-
+    function Match(Subject: string; Trigger: Trigger): Boolean;virtual;
     procedure BeginUse(Target: TObject);virtual;
     function Enabled(Target: TObject): Boolean;virtual;
     function SatisfiedBy(Target: TObject): Boolean;
@@ -44,6 +45,7 @@ type
     property RuleName: string read GetRuleName;
     property SubjectMask: string read FSubjectMask;
     property Triggers: Trigers read FTriggers;
+    property MatchedSubject: string read FMatchedSubject;
   end;
   TRuleList = TObjectList<TRule>;
 
@@ -72,6 +74,7 @@ type
     FRegistry: TRegistry;
     FRegistryDirty: Boolean;
   protected
+    function GetState(Rule: TRule; ATarget: TObject): TRule.State;virtual;
     procedure CheckRegistryIsDirty;
   public
     constructor Create;
@@ -149,6 +152,16 @@ begin
   Result := Satisfy(Format(SubjectFmt, Args),ForTrigger, ATarget, Errors);
 end;
 
+function TRuleEngine.GetState(Rule: TRule; ATarget: TObject): TRule.State;
+begin
+  if not Rule.Enabled(ATarget) then
+    Result := rsDisabled
+  else if Rule.SatisfiedBy(ATarget) then
+    Result := rsSatisfied
+  else
+    Result := rsFail;
+end;
+
 function TRuleEngine.Satisfy(Subject: string; ForTrigger: TRule.Trigger; ATarget: TObject;
   out Errors: TErrorInfos): Boolean;
 var
@@ -158,15 +171,16 @@ begin
   CheckRegistryIsDirty;
   for Rule in FRegistry do begin
     if not Rule.Match(Subject, ForTrigger) then Continue;
+    Rule.FMatchedSubject := Subject;
     try
       Rule.BeginUse(ATarget);
-      if not Rule.Enabled(ATarget) then Continue;
-      if Rule.SatisfiedBy(ATarget) then Continue;
+      if GetState(Rule, ATarget) <> rsFail then Continue;
       if not Assigned(Errors) then
         Errors := TErrorInfos.Create;
       Errors.Add(TErrorInfo.Create(Rule, ATarget, Rule.ErrorMessage));
     finally
       Rule.EndUse(ATarget);
+      Rule.FMatchedSubject := '';
     end;
   end;
   Result := not Assigned(Errors);

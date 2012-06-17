@@ -72,7 +72,7 @@ type
   end;
 
   TLogger = class
-  type Childs = TDictionary<string, TLogger>;
+  type Childs = TObjectDictionary<string, TLogger>;
   private
   var
     FWriters: TLog.Writers;
@@ -82,10 +82,13 @@ type
     FHistoryEnabled: Boolean;
     FChilds: TLogger.Childs;
     FParent: TLogger;
+    FAdditivity: Boolean;
     function GetLevel: TLog.Level;
     procedure SetLevel(const Value: TLog.Level);
+    procedure SetAdditivity(const Value: Boolean);
   protected
-    procedure Log(RequestedLevel: TLog.Level; Msg: string);
+    procedure Log(AEvent: Tlog.Event);overload;
+    procedure Log(RequestedLevel: TLog.Level; Msg: string);overload;
     function GetChild(Name: string): TLogger;
   public
     class function GetRootLogger: TLogger;
@@ -93,6 +96,7 @@ type
     constructor Create(AParent: TLogger);
     destructor Destroy;override;
     property Level: TLog.Level read GetLevel write SetLevel;
+    property Additivity: Boolean read FAdditivity write SetAdditivity;
     procedure AddWriter(W: TLog.Writer);
     procedure RemoveWriter(W: TLog.Writer);
     procedure ExtractWriter(W: TLog.Writer);
@@ -267,23 +271,28 @@ begin
   FWriters.Extract(W);
 end;
 
-procedure TLogger.Log(RequestedLevel: TLog.Level; Msg: string);
+procedure TLogger.Log(AEvent: Tlog.Event);
 var
   Writer: TLog.Writer;
+begin
+  if (AEvent.Level >= Level) then
+    for Writer in FWriters do
+      Writer.Write(AEvent);
+  if Additivity and Assigned(FParent) then
+    FParent.Log(AEvent);
+end;
+
+procedure TLogger.Log(RequestedLevel: TLog.Level; Msg: string);
+var
   CurrentEvent: TLog.Event;
 begin
-  if not (RequestedLevel >= Level) then
-    Exit;
-
   CurrentEvent := TLog.Event.Create;
   try
     CurrentEvent.Level := RequestedLevel;
     CurrentEvent.TimeStamp := Now;
     CurrentEvent.ThreadID := TThread.CurrentThread.ThreadID;
     CurrentEvent.Text:= Msg;
-    for Writer in FWriters do begin
-      Writer.Write(CurrentEvent);
-    end;
+    Log(CurrentEvent);
   finally
     if HistoryEnabled then
       FHistory.Add(CurrentEvent)
@@ -308,6 +317,11 @@ begin
   Result := FParent.Level;
 end;
 
+procedure TLogger.SetAdditivity(const Value: Boolean);
+begin
+  FAdditivity := Value;
+end;
+
 procedure TLogger.SetLevel(const Value: TLog.Level);
 begin
   FLevel := Value;
@@ -328,7 +342,10 @@ constructor TLogger.Create(AParent: TLogger);
 begin
   inherited Create;
   FParent := AParent;
-  FChilds := Childs.Create;
+  FAdditivity := True;
+  FChilds := Childs.Create([doOwnsValues]);
+  FHistory :=  TLog.History.Create;
+  FWriters := TLog.Writers.Create;
 end;
 
 destructor TLogger.Destroy;
@@ -402,7 +419,7 @@ begin
   ChildTail := Copy(Name, DotIdx + 1, Length(Name) - 1);
 
   if not FChilds.TryGetValue(ChildName, Result) then begin
-    FChilds[ChildName] := TLogger.Create(Self);
+    FChilds.Add(ChildName, TLogger.Create(Self));
     Result := FChilds[ChildName];
   end;
 
@@ -544,8 +561,6 @@ initialization
   Logger := TLogger.Create(nil);
   Logger.Level := TLog.Info;
   Logger.HistoryEnabled := True;
-  Logger.FHistory :=  TLog.History.Create;
-  Logger.FWriters := TLog.Writers.Create;
 finalization
   Logger.Free;
 end.
