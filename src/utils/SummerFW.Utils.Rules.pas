@@ -29,8 +29,9 @@ type
     FTriggers: Trigers;
     FErrorMessage: string;
   protected
+    FMatchedTrigger: Trigger;
     FMatchedSubject: string;
-    function GetRuleName: string;virtual;
+    function GetName: string;virtual;
     function GetErrorMessage(Target: TObject): string;virtual;
     function DoSatisfiedBy(Target: TObject): Boolean;virtual;abstract;
   public
@@ -40,12 +41,13 @@ type
     function Enabled(Target: TObject): Boolean;virtual;
     function SatisfiedBy(Target: TObject): Boolean;
     procedure EndUse(Target: TObject);virtual;
-    property Order: Integer read FOrder;
-    property ErrorMessage: string read FErrorMessage;
-    property RuleName: string read GetRuleName;
+    property Name: string read GetName;
     property SubjectMask: string read FSubjectMask;
     property Triggers: Trigers read FTriggers;
+    property MatchedTrigger: Trigger read FMatchedTrigger;
     property MatchedSubject: string read FMatchedSubject;
+    property Order: Integer read FOrder;
+    property ErrorMessage: string read FErrorMessage;
   end;
   TRuleList = TObjectList<TRule>;
 
@@ -119,10 +121,10 @@ end;
 
 function TRule.GetErrorMessage(Target: TObject): string;
 begin
-  Result := Format('Rule %s failed for target %s', [RuleName, Target.ToString])
+  Result := Format('Rule %s failed for target %s', [Name, Target.ToString])
 end;
 
-function TRule.GetRuleName: string;
+function TRule.GetName: string;
 begin
   Result := ClassName;
   if AnsiStartsText('T', Result) then
@@ -171,8 +173,9 @@ begin
   CheckRegistryIsDirty;
   for Rule in FRegistry do begin
     if not Rule.Match(Subject, ForTrigger) then Continue;
-    Rule.FMatchedSubject := Subject;
     try
+      Rule.FMatchedTrigger := ForTrigger;
+      Rule.FMatchedSubject := Subject;
       Rule.BeginUse(ATarget);
       if GetState(Rule, ATarget) <> rsFail then Continue;
       if not Assigned(Errors) then
