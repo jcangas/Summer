@@ -17,6 +17,7 @@ uses
   Generics.Collections,
   SummerFW.Utils.RTL;
 
+// TODO. Event.Logger allow know wich logger generates the event
 type
   TLog = class
   type

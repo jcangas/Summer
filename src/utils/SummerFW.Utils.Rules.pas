@@ -11,8 +11,13 @@ interface
 uses Classes,SysUtils,  Generics.Defaults, Generics.Collections,
   RegularExpressions, SummerFW.Utils.RTL;
 
+//TODO: Match can depend on Target.
+// Trap Any exception while rule is procesed
+// RuleEngine.CurrentRule
+
 type
   TRuleClass = class of TRule;
+  TRuleEngine = class;
   TRule = class
   type
     TMatchKind = (mkRegExpr, mkString);
@@ -24,6 +29,7 @@ type
       function Compare(const Left, Right: TRule): Integer; override;
     end;
   private
+    FRuleEngine: TRuleEngine;
     FOrder: Integer;
     FSubjectMask: string;
     FTriggers: Trigers;
@@ -34,13 +40,14 @@ type
     function GetName: string;virtual;
     function GetErrorMessage(Target: TObject): string;virtual;
     function DoSatisfiedBy(Target: TObject): Boolean;virtual;abstract;
+    constructor Create(RuleEngine: TRuleEngine; SubjectMask: string; Triggers: array of Trigger; MatchKind: TMatchKind;Order: Integer);
   public
-    constructor Create(SubjectMask: string; Triggers: array of Trigger; MatchKind: TMatchKind;Order: Integer);
     function Match(Subject: string; Trigger: Trigger): Boolean;virtual;
     procedure BeginUse(Target: TObject);virtual;
     function Enabled(Target: TObject): Boolean;virtual;
     function SatisfiedBy(Target: TObject): Boolean;
     procedure EndUse(Target: TObject);virtual;
+    property RuleEngine: TRuleEngine read FRuleEngine;
     property Name: string read GetName;
     property SubjectMask: string read FSubjectMask;
     property Triggers: Trigers read FTriggers;
@@ -104,9 +111,10 @@ begin
 
 end;
 
-constructor TRule.Create(SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TMatchKind; Order: Integer);
+constructor TRule.Create(RuleEngine: TRuleEngine; SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TMatchKind; Order: Integer);
 begin
   inherited Create;
+  FRuleEngine := RuleEngine;
   if MatchKind = mkString then
     SubjectMask := TRegEx.Escape(SubjectMask);
   FSubjectMask := '^' + SubjectMask + '$';
@@ -225,7 +233,7 @@ function TRuleEngine.Register(RuleClass: TRuleClass; SubjectMask: string;
 begin
   Result := Self;
   FRegistryDirty := True;
-  FRegistry.Add(RuleClass.Create(SubjectMask, Triggers, MatchKind, Order));
+  FRegistry.Add(RuleClass.Create(Self, SubjectMask, Triggers, MatchKind, Order));
 end;
 
 { TRuleEngine.TRuleErrorInfo }
