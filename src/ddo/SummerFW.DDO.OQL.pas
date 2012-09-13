@@ -2,7 +2,7 @@ unit SummerFW.DDO.OQL;
 
 interface
 
-uses Rtti, SysUtils, Generics.Collections;
+uses RTTI, SysUtils, Generics.Collections;
 
 type
 

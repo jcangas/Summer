@@ -179,7 +179,7 @@ end;
 procedure TInterfacedEnumerableList<T>.BeforeDestruction;
 begin
   if FRefCount <> 0 then
-    Error(reInvalidPtr);
+    System.Error(reInvalidPtr);
   inherited;
 end;
 

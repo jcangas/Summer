@@ -1,7 +1,8 @@
 unit SummerFW.DDO.DBXDriver;
 
 interface
-uses RTTI,
+uses
+  RTTI,
   SummerFW.DDO.OQL,
   SummerFW.DDO.Mappers,
   DB,
@@ -100,7 +101,7 @@ var
 begin
   SQL := Qry.ToSQL;
   Logger.Trace('DDO-SQL: ' + SQL);
-  FConnection.Execute(Qry.ToSQL, nil, @RS);
+  FConnection.Execute(Qry.ToSQL, nil, RS);
   Result := TValue.FromVariant(RS.Fields[0].Value);
   RS.Free;
 end;
@@ -120,7 +121,7 @@ begin
   FDriver := Driver;
   SQL := Qry.ToSQL;
   Logger.Trace('DDO-SQL: ' + SQL);
-  FDriver.FConnection.Execute(Qry.ToSQL, nil, @FDataset);
+  FDriver.FConnection.Execute(Qry.ToSQL, nil, FDataset);
   Reset;
 end;
 

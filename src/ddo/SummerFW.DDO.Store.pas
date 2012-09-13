@@ -3,7 +3,9 @@ unit SummerFW.DDO.Store;
 interface
 
 uses
-  Rtti, Classes, SysUtils,
+  RTTI,
+  Classes,
+  SysUtils,
   SummerFW.Utils.Collections,
   SummerFW.DDO.OQL,
   SummerFW.DDO.CallBack,
@@ -132,9 +134,9 @@ begin
   List._AddRef;
   ReferenceKey := TMapper.GetFor(ClassReferenced)
       [HasManyAttribute(Prop.Relation).RelatedProp].StorageName;
-  with OQL do
-    List.AddRange((FStore as TDDOStore).From<TObject>(ClassReferenced)
-        .WHERE(EQ(ReferenceKey, TStoreInfo.GetID(Obj))).SELECT);
+
+  List.AddRange((FStore as TDDOStore).From<TObject>(ClassReferenced)
+        .WHERE(OQL.EQ(ReferenceKey, TStoreInfo.GetID(Obj))).SELECT);
 
   Prop.SetValue(Obj, List);
 end;

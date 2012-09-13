@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{E4702CE9-CE38-491A-8E41-9DA13AE1BB43}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="\\psf\Home\Projects\github\SummerFW4D\src\utils\D170-XE3\SummerFW.Utils.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\ddo\D170-XE3\SummerFW.DDO.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="SummerFW_Utils">
+        <MSBuild Projects="\\psf\Home\Projects\github\SummerFW4D\src\utils\D170-XE3\SummerFW.Utils.dproj"/>
+    </Target>
+    <Target Name="SummerFW_Utils:Clean">
+        <MSBuild Projects="\\psf\Home\Projects\github\SummerFW4D\src\utils\D170-XE3\SummerFW.Utils.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SummerFW_Utils:Make">
+        <MSBuild Projects="\\psf\Home\Projects\github\SummerFW4D\src\utils\D170-XE3\SummerFW.Utils.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="SummerFW_DDO">
+        <MSBuild Projects="..\ddo\D170-XE3\SummerFW.DDO.dproj"/>
+    </Target>
+    <Target Name="SummerFW_DDO:Clean">
+        <MSBuild Projects="..\ddo\D170-XE3\SummerFW.DDO.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SummerFW_DDO:Make">
+        <MSBuild Projects="..\ddo\D170-XE3\SummerFW.DDO.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="SummerFW_Utils;SummerFW_DDO"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="SummerFW_Utils:Clean;SummerFW_DDO:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="SummerFW_Utils:Make;SummerFW_DDO:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
