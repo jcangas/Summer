@@ -91,8 +91,8 @@ type
     function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: array of TRule.Trigger; Order: Integer): TRuleEngine;overload;
     function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind = mkRegExpr): TRuleEngine;overload;
     function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind; Order: Integer): TRuleEngine;overload;
-    function Satisfy(Subject: string; ForTrigger: TRule.Trigger; ATarget: TObject; out Errors: TErrorInfos): Boolean;overload;
-    function Satisfy(SubjectFmt: string; Args: array of const; ForTrigger: TRule.Trigger; ATarget: TObject; out Errors: TErrorInfos): Boolean;overload;
+    function Satisfy(Subject: string; ForTrigger: TRule.Trigger; ATarget: TObject; var Errors: TErrorInfos): Boolean;overload;
+    function Satisfy(SubjectFmt: string; Args: array of const; ForTrigger: TRule.Trigger; ATarget: TObject; var Errors: TErrorInfos): Boolean;overload;
   end;
 
 implementation
@@ -157,7 +157,7 @@ end;
 { TRuleEngine }
 
 function TRuleEngine.Satisfy(SubjectFmt: string; Args: array of const;
-  ForTrigger: TRule.Trigger; ATarget: TObject; out Errors: TErrorInfos): Boolean;
+  ForTrigger: TRule.Trigger; ATarget: TObject; var Errors: TErrorInfos): Boolean;
 begin
   Result := Satisfy(Format(SubjectFmt, Args),ForTrigger, ATarget, Errors);
 end;
@@ -173,11 +173,11 @@ begin
 end;
 
 function TRuleEngine.Satisfy(Subject: string; ForTrigger: TRule.Trigger; ATarget: TObject;
-  out Errors: TErrorInfos): Boolean;
+  var Errors: TErrorInfos): Boolean;
 var
   Rule: TRule;
 begin
-  Errors := nil;
+  Result := True;
   CheckRegistryIsDirty;
   for Rule in FRegistry do begin
     if not Rule.Match(Subject, ForTrigger) then Continue;
@@ -188,13 +188,13 @@ begin
       if GetState(Rule, ATarget) <> rsFail then Continue;
       if not Assigned(Errors) then
         Errors := TErrorInfos.Create;
+      Result := False;
       Errors.Add(TErrorInfo.Create(Rule, ATarget, Rule.ErrorMessage));
     finally
       Rule.EndUse(ATarget);
       Rule.FMatchedSubject := '';
     end;
   end;
-  Result := not Assigned(Errors);
 end;
 
 procedure TRuleEngine.CheckRegistryIsDirty;
