@@ -31,7 +31,6 @@ type
       Category: string;
       Text: string;
     end;
-    History = TObjectList<Event>;
 
     FormatterClass = class of Formatter;
     Formatter = class
@@ -44,49 +43,46 @@ type
     Writer = class
     private
       FFormatter: TLog.Formatter;
-      FWantHistory: Boolean;
       FSilencers: Silencers;
     protected
       function FormatEvent(Event: TLog.Event): string;
       procedure DoWriteEvent(Event: TLog.Event); virtual;abstract;
     public
-      constructor Create(FormatterClass: TLog.FormatterClass; WantHistory: Boolean);overload;
-      constructor Create(FormatterClass: TLog.FormatterClass);overload;
-      constructor Create(WantHistory: Boolean= False);overload;
+      constructor Create(FormatterClass: TLog.FormatterClass = nil);
       procedure AddSilencer(name: string; Silencer: TLog.Silencer);
       procedure RemoveSilencer(name: string);
       destructor Destroy; override;
       procedure Write(Event: TLog.Event);
-      property WantHistory: Boolean read FWantHistory;
     end;
     Writers = TObjectList<Writer>;
 
   public const
-    All: TLog.Level   = (FValue: low(Integer); FID: 'ALL');
+    All: TLog.Level   = (FValue: Low(Integer); FID: 'ALL');
     Trace: TLog.Level = (FValue: 0; FID: 'TRACE');
     Debug: TLog.Level = (FValue: 100; FID: 'DEBUG');
     Info: TLog.Level  = (FValue: 200; FID: 'INFO');
     Warn: TLog.Level  = (FValue: 300; FID: 'WARN');
     Error: TLog.Level = (FValue: 400; FID: 'ERROR');
     Fatal: TLog.Level = (FValue: 500; FID: 'FATAL');
-    Off: TLog.Level   = (FValue: high(Integer); FID: 'OFF');
+    Off: TLog.Level   = (FValue: High(Integer); FID: 'OFF');
   end;
 
   TLogger = class
-  type Childs = TObjectDictionary<string, TLogger>;
-  private
-  var
-    FWriters: TLog.Writers;
-    FHistory: TLog.History;
-    FLevel: TLog.Level;
-    FLevelAssigned: Boolean;
-    FHistoryEnabled: Boolean;
-    FChilds: TLogger.Childs;
+  public type
+    Childs = TObjectDictionary<string, TLogger>;
+  private var
+    FName: string;
     FParent: TLogger;
     FAdditivity: Boolean;
+    FLevel: TLog.Level;
+    FLevelAssigned: Boolean;
+    FWriters: TLog.Writers;
+    FChilds: TLogger.Childs;
     function GetLevel: TLog.Level;
     procedure SetLevel(const Value: TLog.Level);
     procedure SetAdditivity(const Value: Boolean);
+    function GetCategory: string;
+    function GetIsRoot: Boolean;
   protected
     procedure Log(AEvent: Tlog.Event);overload;
     procedure Log(RequestedLevel: TLog.Level; Msg: string);overload;
@@ -94,15 +90,11 @@ type
   public
     class function GetRootLogger: TLogger;
     class function GetLogger(Name: string): TLogger;
-    constructor Create(AParent: TLogger);
+    constructor Create(AParent: TLogger; AName: string);
     destructor Destroy;override;
-    property Level: TLog.Level read GetLevel write SetLevel;
-    property Additivity: Boolean read FAdditivity write SetAdditivity;
     procedure AddWriter(W: TLog.Writer);
     procedure RemoveWriter(W: TLog.Writer);
     procedure ExtractWriter(W: TLog.Writer);
-    property HistoryEnabled: Boolean read FHistoryEnabled write FHistoryEnabled;
-    procedure SendHistoryTo(Writer: TLog.Writer);
 
     procedure Debug(Msg: string); overload;
     procedure Debug(Fmt: string; Args: array of const ); overload;
@@ -116,6 +108,13 @@ type
     procedure Error(Fmt: string; Args: array of const ); overload;
     procedure Fatal(Msg: string); overload;
     procedure Fatal(Fmt: string; Args: array of const ); overload;
+
+    property Name: string read FName;
+    property Parent: TLogger read FParent;
+    property Category: string read GetCategory;
+    property Level: TLog.Level read GetLevel write SetLevel;
+    property Additivity: Boolean read FAdditivity write SetAdditivity;
+    property IsRoot: Boolean read GetIsRoot;
   end;
 
   {$REGION 'Abstract Writers'}
@@ -195,31 +194,20 @@ uses
 function TLog.Formatter.Format(Event: TLog.Event): string;
 begin
   with Event do
-    Result := SysUtils.Format('%s #%d [%s] %s - %s',
+    Result := SysUtils.Format('%s #%d [%s] %s - %s: ',
         [FormatDateTime('yyyy mmm dd "|" hh:nn:ss:zzz', TimeStamp), ThreadID,
         Level.ToString, Category, Text]);
 end;
 
 { TLog.Writer }
 
-constructor TLog.Writer.Create(FormatterClass: TLog.FormatterClass; WantHistory: Boolean);
+constructor TLog.Writer.Create(FormatterClass: TLog.FormatterClass = nil);
 begin
   inherited Create;
   FSilencers := Silencers.Create;
   if FormatterClass = nil then
     FormatterClass := TLog.Formatter;
   FFormatter := FormatterClass.Create;
-  FWantHistory := WantHistory;
-end;
-
-constructor TLog.Writer.Create(FormatterClass: TLog.FormatterClass);
-begin
-  Create(FormatterClass, False);
-end;
-
-constructor TLog.Writer.Create(WantHistory: Boolean = False);
-begin
-  Create(nil, WantHistory);
 end;
 
 destructor TLog.Writer.Destroy;
@@ -258,8 +246,6 @@ end;
 procedure TLogger.AddWriter(W: TLog.Writer);
 begin
   FWriters.Add(W);
-  if W.WantHistory then
-    SendHistoryTo(W);
 end;
 
 procedure TLogger.RemoveWriter(W: TLog.Writer);
@@ -292,23 +278,11 @@ begin
     CurrentEvent.Level := RequestedLevel;
     CurrentEvent.TimeStamp := Now;
     CurrentEvent.ThreadID := TThread.CurrentThread.ThreadID;
+    CurrentEvent.Category := Category;
     CurrentEvent.Text:= Msg;
     Log(CurrentEvent);
   finally
-    if HistoryEnabled then
-      FHistory.Add(CurrentEvent)
-    else
-      CurrentEvent.Free;
-  end;
-end;
-
-procedure TLogger.SendHistoryTo(Writer: TLog.Writer);
-var
-  Event: TLog.Event;
-begin
-  if Writer = nil then Exit;
-  for Event in FHistory do begin
-    Writer.Write(Event);
+    CurrentEvent.Free;
   end;
 end;
 
@@ -339,20 +313,19 @@ begin
   Debug(Format(Fmt, Args));
 end;
 
-constructor TLogger.Create(AParent: TLogger);
+constructor TLogger.Create(AParent: TLogger; AName: string);
 begin
   inherited Create;
   FParent := AParent;
+  FName := AName;
   FAdditivity := True;
   FChilds := Childs.Create([doOwnsValues]);
-  FHistory :=  TLog.History.Create;
   FWriters := TLog.Writers.Create;
 end;
 
 destructor TLogger.Destroy;
 begin
   FWriters.Free;
-  FHistory.Free;
   FChilds.Free;
   inherited;
 end;
@@ -375,6 +348,11 @@ end;
 procedure TLogger.Info(Fmt: string; Args: array of const );
 begin
   Info(Format(Fmt, Args));
+end;
+
+function TLogger.GetIsRoot: Boolean;
+begin
+  Result := Parent = nil;
 end;
 
 procedure TLogger.Warn(Msg: string);
@@ -407,6 +385,13 @@ begin
   Fatal(Format(Fmt, Args));
 end;
 
+function TLogger.GetCategory: string;
+begin
+  if IsRoot then Exit(Name)
+  else if Parent.IsRoot then Exit(Name)
+  else Exit(Parent.Name + '.' + Name);
+end;
+
 function TLogger.GetChild(Name: string): TLogger;
 var
   DotIdx: Integer;
@@ -420,7 +405,7 @@ begin
   ChildTail := Copy(Name, DotIdx + 1, Length(Name) - 1);
 
   if not FChilds.TryGetValue(ChildName, Result) then begin
-    FChilds.Add(ChildName, TLogger.Create(Self));
+    FChilds.Add(ChildName, TLogger.Create(Self,  ChildName));
     Result := FChilds[ChildName];
   end;
 
@@ -559,9 +544,8 @@ begin
 end;
 
 initialization
-  Logger := TLogger.Create(nil);
+  Logger := TLogger.Create(nil, '');
   Logger.Level := TLog.Info;
-  Logger.HistoryEnabled := True;
 finalization
   Logger.Free;
 end.
