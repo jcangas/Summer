@@ -5,7 +5,6 @@
   Your reuse is governed by the Creative Commons Attribution 3.0 License
 }
 
-
 /// A logging service totally inspired by Log4J http://logging.apache.org/log4j/1.2/
 
 unit SummerFW.Utils.Log;
@@ -17,7 +16,6 @@ uses
   Generics.Collections,
   SummerFW.Utils.RTL;
 
-// TODO. Event.Logger allow know wich logger generates the event
 type
   TLog = class
   type
@@ -162,6 +160,7 @@ type
   public
   end;
 
+  {$IFDEF MSWINDOWS}
   TOutputDebugLogWriter = class(TWriteTextLogWriter)
   protected
     procedure DoWriteText(Text: string); override;
@@ -180,6 +179,7 @@ type
     destructor Destroy;override;
     property SourceName: string read FSourceName;
   end;
+  {$ENDIF}
 
 var
   Logger: TLogger;
@@ -187,7 +187,8 @@ var
 implementation
 
 uses
-  RTLConsts, IOUtils, Windows;
+ {$IFDEF MSWINDOWS} Windows, {$ENDIF}
+  RTLConsts, IOUtils;
 
 { TLog.Formatter }
 
@@ -469,6 +470,21 @@ begin
   System.WriteLn(Text);
 end;
 
+{ TTextFileLogWriter }
+
+constructor TTextFileLogWriter.Create(FileName: string; FormatterClass: TLog.FormatterClass = nil);
+begin
+  inherited Create(FormatterClass);
+  FFilename := FileName;
+end;
+
+procedure TTextFileLogWriter.DoWriteText(Text: string);
+begin
+  TFile.AppendAllText(Filename, Text + sLineBreak);
+end;
+
+{$IFDEF MSWINDOWS}
+
 { TOutputDebugLogWriter }
 
 procedure TOutputDebugLogWriter.DoWriteText(Text: string);
@@ -529,19 +545,7 @@ begin
             UserSecurityID, 1, // one substitution string
             NoEventData, @ss, PtrToData);
 end;
-
-{ TTextFileLogWriter }
-
-constructor TTextFileLogWriter.Create(FileName: string; FormatterClass: TLog.FormatterClass = nil);
-begin
-  inherited Create(FormatterClass);
-  FFilename := FileName;
-end;
-
-procedure TTextFileLogWriter.DoWriteText(Text: string);
-begin
-  TFile.AppendAllText(Filename, Text + sLineBreak);
-end;
+{$ENDIF}
 
 initialization
   Logger := TLogger.Create(nil, '');

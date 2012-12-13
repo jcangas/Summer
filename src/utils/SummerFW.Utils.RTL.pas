@@ -8,7 +8,7 @@
 unit SummerFW.Utils.RTL;
 
 interface
-uses SysUtils, Classes, Controls;
+uses SysUtils, Classes;
 
 type
   TOpenEnum = record
@@ -40,14 +40,6 @@ type
     class procedure Lock(obj: TObject; P: TProc);overload;static;
     class function Lock<T>(obj: TObject; F: TFunc<T>): T;overload;static;
   end;
-
-  TUnprotectControl = class(Controls.TControl)
-  public
-    property Color;
-    property Caption;
-    property Text;
-  end;
-
 
   TFreeNotifier = class(TComponent)
   private

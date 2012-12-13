@@ -25,11 +25,12 @@ package SummerFW.DDO;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
+{$LIBSUFFIX '170'}
+{$DESIGNONLY}
 {$IMPLICITBUILD ON}
 
 requires
   rtl,
-  vcl,
   dbrtl,
   DbxCommonDriver,
   dbexpress,

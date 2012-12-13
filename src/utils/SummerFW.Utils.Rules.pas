@@ -8,91 +8,105 @@
 unit SummerFW.Utils.Rules;
 
 interface
-uses Classes,SysUtils,  Generics.Defaults, Generics.Collections,
-  RegularExpressions, SummerFW.Utils.RTL;
 
-//TODO: Match can depend on Target.
-// Trap Any exception while rule is procesed
-// RuleEngine.CurrentRule
+uses Classes, SysUtils, Generics.Defaults, Generics.Collections,
+  RegularExpressions, SummerFW.Utils.RTL;
 
 type
   TRuleClass = class of TRule;
   TRuleEngine = class;
+
+  TRuleTrigger = TOpenEnum;
+  TRuleTriggers = TRuleTrigger.CodeSet;
+  TResultKind = (rsNoTrigger, rsSatisfied, rsIgnored, rsHint, rsWarn, rsFail);
   TRule = class
   type
-    TMatchKind = (mkRegExpr, mkString);
-    Trigger = TOpenEnum;
-    Trigers = Trigger.CodeSet;
-    State = (rsFail, rsDisabled, rsSatisfied);
-    TComparer = class(TComparer<TRule>)
-    public
-      function Compare(const Left, Right: TRule): Integer; override;
-    end;
-  private
-    FRuleEngine: TRuleEngine;
-    FOrder: Integer;
-    FSubjectMask: string;
-    FTriggers: Trigers;
-    FErrorMessage: string;
-  protected
-    FMatchedTrigger: Trigger;
-    FMatchedSubject: string;
-    function GetName: string;virtual;
-    function GetErrorMessage(Target: TObject): string;virtual;
-    function DoSatisfiedBy(Target: TObject): Boolean;virtual;abstract;
-    constructor Create(RuleEngine: TRuleEngine; SubjectMask: string; Triggers: array of Trigger; MatchKind: TMatchKind;Order: Integer);
-  public
-    function Match(Subject: string; Trigger: Trigger): Boolean;virtual;
-    procedure BeginUse(Target: TObject);virtual;
-    function Enabled(Target: TObject): Boolean;virtual;
-    function SatisfiedBy(Target: TObject): Boolean;
-    procedure EndUse(Target: TObject);virtual;
-    property RuleEngine: TRuleEngine read FRuleEngine;
-    property Name: string read GetName;
-    property SubjectMask: string read FSubjectMask;
-    property Triggers: Trigers read FTriggers;
-    property MatchedTrigger: Trigger read FMatchedTrigger;
-    property MatchedSubject: string read FMatchedSubject;
-    property Order: Integer read FOrder;
-    property ErrorMessage: string read FErrorMessage;
-  end;
-  TRuleList = TObjectList<TRule>;
-
-  TRuleEngine = class
-  public
-  type
-    TRegistry = TRuleList;
-    TErrorInfo = class
+    TTriggerInfo = record
     private
-      FRule: TRule;
-      FTarget: TObject;
-      FMessage: string;
+      FSubjectMask: string;
+      FTriggers: TRuleTriggers;
+      FOrder: Integer;
+      FRuleClass: TRuleClass;
     public
-      constructor Create(Rule: TRule; Target: TObject; Msg: string);
-      function ToString: string;override;
-      property Rule: TRule read FRule;
+      function Match(Subject: string; Trigger: TRuleTrigger): Boolean;
+      property SubjectMask: string read FSubjectMask;
+      property Triggers: TRuleTriggers read FTriggers;
+      property Order: Integer read FOrder;
+      property RuleClass: TRuleClass read FRuleClass;
+      constructor Create(RuleClass: TRuleClass; SubjectMask: string; Triggers: TRuleTriggers; Order: Integer);
+    end;
+
+    TTriggerInfoComparer = class(TComparer<TRule.TTriggerInfo>)
+    public
+      function Compare(const Left, Right: TRule.TTriggerInfo): Integer;
+        override;
+    end;
+    TTriggerInfos = class(TList<TRule.TTriggerInfo>);
+
+    TResultInfo = record
+    strict private
+      FRuleClass: TRuleClass;
+      FSubject: string;
+      FTrigger: TRuleTrigger;
+      FTarget: TObject;
+      FKind: TResultKind;
+      FMessage: string;
+    private
+      procedure Prepare(Subject: string; Trigger: TRuleTrigger; Target: TObject);
+      procedure Reset;
+      procedure SetMessage(const Value: string);
+    public
+      constructor Create(RuleClass: TRuleClass);
+      property RuleClass: TRuleClass read FRuleClass;
+      property Subject: string read FSubject;
+      property Trigger: TRuleTrigger read FTrigger;
       property Target: TObject read FTarget;
+      property Kind: TResultKind read FKind write FKind;
       property Message: string read FMessage;
     end;
+    TResultInfos = class(TList<TResultInfo>);
 
-    TErrorInfos = class(TObjectList<TErrorInfo>)
-    public
-      function ToString: string;override;
-    end;
-  private
-    FRegistry: TRegistry;
+  strict private
+    FRuleEngine: TRuleEngine;
+    FTriggerInfo: TTriggerInfo;
+    FRuleResult: TResultInfo;
+    function GetTarget: TObject;
+  protected
+    class function GetName: string; virtual;
+    function GetResultMessage: string; virtual;
+    procedure Reset; virtual;
+    constructor Create(RuleEngine: TRuleEngine; TriggerInfo: TTriggerInfo);
+  public
+    function Accept(Target: TObject): Boolean; virtual;
+    function Satisfied: Boolean; virtual; abstract;
+    procedure Done;
+    property RuleEngine: TRuleEngine read FRuleEngine;
+    property Name: string read GetName;
+    property Target: TObject read GetTarget;
+    property TriggerInfo: TTriggerInfo read FTriggerInfo;
+    property ResultInfo: TResultInfo read FRuleResult;
+  end;
+
+  TRuleEngine = class
+  strict private
+    FRegistry: TRule.TTriggerInfos;
     FRegistryDirty: Boolean;
   protected
-    function GetState(Rule: TRule; ATarget: TObject): TRule.State;virtual;
+    function CreateRule(Info: TRule.TTriggerInfo): TRule;
     procedure CheckRegistryIsDirty;
+    procedure AfterTriggerRule(Rule: TRule);virtual;
+    procedure BeforeTriggerRule(Rule: TRule);virtual;
   public
     constructor Create;
     destructor Destroy; override;
-    function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: array of TRule.Trigger; Order: Integer): TRuleEngine;overload;
-    function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind = mkRegExpr): TRuleEngine;overload;
-    function Register(RuleClass: TRuleClass; SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind; Order: Integer): TRuleEngine;overload;
-    function Satisfy(Subject: string; ForTrigger: TRule.Trigger; ATarget: TObject; var Errors: TErrorInfos): Boolean;overload;
-    function Satisfy(SubjectFmt: string; Args: array of const; ForTrigger: TRule.Trigger; ATarget: TObject; var Errors: TErrorInfos): Boolean;overload;
+    function Register(Info: TRule.TTriggerInfo): TRuleEngine; overload;
+    function Register(RuleClass: TRuleClass; SubjectMask: string;
+      Triggers: array of TRuleTrigger; Order: Integer): TRuleEngine; overload;
+    function Satisfy(Subject: string; ForTrigger: TRuleTrigger;
+      ATarget: TObject; var ResultInfos: TRule.TResultInfos): Boolean; overload;
+    function Satisfy(SubjectFmt: string; Args: array of const;
+      ForTrigger: TRuleTrigger; ATarget: TObject; var ResultInfos: TRule.TResultInfos)
+      : Boolean; overload;
   end;
 
 implementation
@@ -101,38 +115,37 @@ uses StrUtils, DB;
 
 { TRule }
 
-procedure TRule.BeginUse(Target: TObject);
-begin
-
-end;
-
-procedure TRule.EndUse(Target: TObject);
-begin
-
-end;
-
-constructor TRule.Create(RuleEngine: TRuleEngine; SubjectMask: string; Triggers: array of TRule.Trigger; MatchKind: TMatchKind; Order: Integer);
-begin
-  inherited Create;
-  FRuleEngine := RuleEngine;
-  if MatchKind = mkString then
-    SubjectMask := TRegEx.Escape(SubjectMask);
-  FSubjectMask := '^' + SubjectMask + '$';
-  FTriggers := TOpenEnum.&Set(Triggers);
-  FOrder := Order;
-end;
-
-function TRule.Enabled(Target: TObject): Boolean;
+function TRule.Accept(Target: TObject): Boolean;
 begin
   Result := True;
 end;
 
-function TRule.GetErrorMessage(Target: TObject): string;
+constructor TRule.Create(RuleEngine: TRuleEngine; TriggerInfo: TTriggerInfo);
 begin
-  Result := Format('Rule %s failed for target %s', [Name, Target.ToString])
+  inherited Create;
+  FRuleEngine := RuleEngine;
+  FTriggerInfo := TriggerInfo;
+  FRuleResult.Create(TRuleClass(ClassType));
+  Reset;
 end;
 
-function TRule.GetName: string;
+procedure TRule.Done;
+begin
+  FRuleResult.Reset;
+  Reset;
+end;
+
+function TRule.GetResultMessage: string;
+begin
+  Result := Format('Rule %s failed for target %s', [Name, Self.ResultInfo.Target.ToString])
+end;
+
+function TRule.GetTarget: TObject;
+begin
+  Result := FRuleResult.Target;
+end;
+
+class function TRule.GetName: string;
 begin
   Result := ClassName;
   if AnsiStartsText('T', Result) then
@@ -141,65 +154,68 @@ begin
     System.Delete(Result, Length(Result) - 3, 4);
 end;
 
-function TRule.Match(Subject: string; Trigger: TRule.Trigger): Boolean;
+procedure TRule.Reset;
 begin
-  Result := Trigger.MemberOf(Triggers) and TRegEx.IsMatch(Subject, FSubjectMask)
-end;
 
-function TRule.SatisfiedBy(Target: TObject): Boolean;
-begin
-  FErrorMessage := '';
-  Result := DoSatisfiedBy(Target);
-  if not Result then
-    FErrorMessage := GetErrorMessage(Target);
 end;
 
 { TRuleEngine }
 
+function TRuleEngine.CreateRule(Info: TRule.TTriggerInfo): TRule;
+begin
+  Result := Info.RuleClass.Create(Self, Info);
+end;
+
 function TRuleEngine.Satisfy(SubjectFmt: string; Args: array of const;
-  ForTrigger: TRule.Trigger; ATarget: TObject; var Errors: TErrorInfos): Boolean;
+  ForTrigger: TRuleTrigger; ATarget: TObject;
+  var ResultInfos: TRule.TResultInfos): Boolean;
 begin
-  Result := Satisfy(Format(SubjectFmt, Args),ForTrigger, ATarget, Errors);
+  Result := Satisfy(Format(SubjectFmt, Args), ForTrigger, ATarget, ResultInfos);
 end;
 
-function TRuleEngine.GetState(Rule: TRule; ATarget: TObject): TRule.State;
+procedure TRuleEngine.BeforeTriggerRule(Rule: TRule);
 begin
-  if not Rule.Enabled(ATarget) then
-    Result := rsDisabled
-  else if Rule.SatisfiedBy(ATarget) then
-    Result := rsSatisfied
-  else
-    Result := rsFail;
 end;
 
-function TRuleEngine.Satisfy(Subject: string; ForTrigger: TRule.Trigger; ATarget: TObject;
-  var Errors: TErrorInfos): Boolean;
+procedure TRuleEngine.AfterTriggerRule(Rule: TRule);
+begin
+end;
+
+function TRuleEngine.Satisfy(Subject: string; ForTrigger: TRuleTrigger;
+  ATarget: TObject; var ResultInfos: TRule.TResultInfos): Boolean;
 var
   Rule: TRule;
+  Info: TRule.TTriggerInfo;
+  Rules: TObjectList<TRule>;
 begin
   Result := True;
   CheckRegistryIsDirty;
-  for Rule in FRegistry do begin
-    if not Rule.Match(Subject, ForTrigger) then Continue;
-    try
-      Rule.FMatchedTrigger := ForTrigger;
-      Rule.FMatchedSubject := Subject;
-      Rule.BeginUse(ATarget);
-      if GetState(Rule, ATarget) <> rsFail then Continue;
-      if not Assigned(Errors) then
-        Errors := TErrorInfos.Create;
-      Result := False;
-      Errors.Add(TErrorInfo.Create(Rule, ATarget, Rule.ErrorMessage));
-    finally
-      Rule.EndUse(ATarget);
-      Rule.FMatchedSubject := '';
+  Rules := TObjectList<TRule>.Create;
+  try
+    for Info in FRegistry do begin
+      if not Info.Match(Subject, ForTrigger) then Continue;
+      Rule := CreateRule(Info);
+      Rules.Add(Rule);
+      if not Rule.Accept(ATarget) then Continue;
+      Rule.ResultInfo.Prepare(Subject, ForTrigger, ATarget);
+      BeforeTriggerRule(Rule);
+      if not Rule.Satisfied then begin
+        Rule.ResultInfo.SetMessage(Rule.GetResultMessage);
+        ResultInfos.Add(Rule.ResultInfo);
+        Result := False;
+      end;
+      Rule.Done;
+      AfterTriggerRule(Rule);
     end;
+  finally
+    Rules.Free;
   end;
 end;
 
 procedure TRuleEngine.CheckRegistryIsDirty;
 begin
-  if not FRegistryDirty then Exit;
+  if not FRegistryDirty then
+    Exit;
   FRegistry.Sort;
   FRegistryDirty := False;
 end;
@@ -207,7 +223,7 @@ end;
 constructor TRuleEngine.Create;
 begin
   inherited Create;
-  FRegistry := TRegistry.Create(TRule.TComparer.Create, True);
+  FRegistry := TRule.TTriggerInfos.Create(TRule.TTriggerInfoComparer.Create);
 end;
 
 destructor TRuleEngine.Destroy;
@@ -216,61 +232,76 @@ begin
   inherited;
 end;
 
-function TRuleEngine.Register(RuleClass: TRuleClass; SubjectMask: string;
-  Triggers: array of TRule.Trigger; Order: Integer): TRuleEngine;
-begin
-  Result := Register(RuleClass, SubjectMask, Triggers, mkRegExpr, Order);
-end;
-
-function TRuleEngine.Register(RuleClass: TRuleClass; SubjectMask: string;
-  Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind): TRuleEngine;
-begin
-  Result := Register(RuleClass, SubjectMask, Triggers, MatchKind, 0);
-end;
-
-function TRuleEngine.Register(RuleClass: TRuleClass; SubjectMask: string;
-  Triggers: array of TRule.Trigger; MatchKind: TRule.TMatchKind; Order: Integer): TRuleEngine;
+function TRuleEngine.Register(Info: TRule.TTriggerInfo): TRuleEngine;
 begin
   Result := Self;
+  FRegistry.Add(Info);
   FRegistryDirty := True;
-  FRegistry.Add(RuleClass.Create(Self, SubjectMask, Triggers, MatchKind, Order));
 end;
 
-{ TRuleEngine.TRuleErrorInfo }
-
-constructor TRuleEngine.TErrorInfo.Create(Rule: TRule; Target: TObject;
-  Msg: string);
-begin
-  inherited Create;
-  FRule := Rule;
-  FTarget := Target;
-  FMessage := Msg;
-end;
-
-function TRuleEngine.TErrorInfo.ToString: string;
-begin
-  Result := Message;
-end;
-
-{ TRuleEngine.TRuleErrorInfoList }
-
-function TRuleEngine.TErrorInfos.ToString: string;
+function TRuleEngine.Register(RuleClass: TRuleClass; SubjectMask: string;
+  Triggers: array of TRuleTrigger; Order: Integer): TRuleEngine;
 var
-  EI: TErrorInfo;
+  Info: TRule.TTriggerInfo;
 begin
-  with TStringBuilder.Create do begin
-    for EI in Self do
-      AppendLine(EI.Message);
-    Result := ToString;
-    Free;
-  end;
+  Result := Self;
+  Info.Create(RuleClass, SubjectMask, TOpenEnum.&Set(Triggers), Order);
+  Register(Info);
 end;
 
-{ TRule.TComparer }
+{ TRuleEngine.TRegistryComparer }
 
-function TRule.TComparer.Compare(const Left, Right: TRule): Integer;
+function TRule.TTriggerInfoComparer.Compare(const Left,
+  Right: TRule.TTriggerInfo): Integer;
 begin
   Result := Left.Order - Right.Order;
+end;
+
+{ TRule.TTriggerInfo }
+
+constructor TRule.TTriggerInfo.Create(RuleClass: TRuleClass; SubjectMask: string; Triggers: TRuleTriggers; Order: Integer);
+begin
+  FRuleClass := RuleClass;
+  FSubjectMask := SubjectMask;
+  FTriggers := Triggers;
+  FOrder := Order;
+end;
+
+function TRule.TTriggerInfo.Match(Subject: string;
+  Trigger: TRuleTrigger): Boolean;
+begin
+  Result := Trigger.MemberOf(Triggers) and TRegEx.IsMatch(Subject, '^' + SubjectMask + '$')
+end;
+
+{ TRule.TResultInfo }
+
+constructor TRule.TResultInfo.Create(RuleClass: TRuleClass);
+begin
+  FRuleClass := RuleClass;
+  Reset;
+end;
+
+procedure TRule.TResultInfo.Reset;
+begin
+  FKind := rsNoTrigger;
+  FTarget := nil;
+  FSubject := '';
+  FMessage := '';
+end;
+
+procedure TRule.TResultInfo.SetMessage(const Value: string);
+begin
+  FMessage := Value;
+end;
+
+procedure TRule.TResultInfo.Prepare(Subject: string; Trigger: TRuleTrigger;
+  Target: TObject);
+begin
+  FSubject := Subject;
+  FTrigger := Trigger;
+  FTarget := Target;
+  FKind := rsSatisfied;
+  FMessage := '';
 end;
 
 end.
