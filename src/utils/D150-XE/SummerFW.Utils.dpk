@@ -32,7 +32,6 @@ requires
   dbrtl;
 
 contains
-  SummerFW.Utils.Binders in '..\SummerFW.Utils.Binders.pas',
   SummerFW.Utils.Collections in '..\SummerFW.Utils.Collections.pas',
   SummerFW.Utils.RTL in '..\SummerFW.Utils.RTL.pas',
   SummerFW.Utils.CLI in '..\SummerFW.Utils.CLI.pas',

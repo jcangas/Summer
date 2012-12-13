@@ -21,26 +21,23 @@ package SummerFW.Utils;
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
-{$MINENUMSIZE 2}
+{$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$LIBSUFFIX '160'}
+{$LIBSUFFIX '170'}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
   rtl,
-  vcl,
   dbrtl;
 
 contains
-  SummerFW.Utils.Binders in '..\SummerFW.Utils.Binders.pas',
-  SummerFW.Utils.Collections in '..\SummerFW.Utils.Collections.pas',
-  SummerFW.Utils.RTL in '..\SummerFW.Utils.RTL.pas',
   SummerFW.Utils.CLI in '..\SummerFW.Utils.CLI.pas',
+  SummerFW.Utils.Collections in '..\SummerFW.Utils.Collections.pas',
   SummerFW.Utils.Log in '..\SummerFW.Utils.Log.pas',
+  SummerFW.Utils.RTL in '..\SummerFW.Utils.RTL.pas',
   SummerFW.Utils.Rules in '..\SummerFW.Utils.Rules.pas';
 
 end.
-
