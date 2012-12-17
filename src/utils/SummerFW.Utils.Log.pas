@@ -195,7 +195,7 @@ uses
 function TLog.Formatter.Format(Event: TLog.Event): string;
 begin
   with Event do
-    Result := SysUtils.Format('%s #%d [%s] %s - %s: ',
+    Result := SysUtils.Format('%s #%d [%s] %s: %s',
         [FormatDateTime('yyyy mmm dd "|" hh:nn:ss:zzz', TimeStamp), ThreadID,
         Level.ToString, Category, Text]);
 end;

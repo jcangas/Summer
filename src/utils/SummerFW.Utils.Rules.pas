@@ -72,7 +72,6 @@ type
     FRuleResult: TResultInfo;
     function GetTarget: TObject;
   protected
-    class function GetName: string; virtual;
     function GetResultMessage: string; virtual;
     procedure Reset; virtual;
     constructor Create(RuleEngine: TRuleEngine; TriggerInfo: TTriggerInfo);
@@ -81,7 +80,7 @@ type
     function Satisfied: Boolean; virtual; abstract;
     procedure Done;
     property RuleEngine: TRuleEngine read FRuleEngine;
-    property Name: string read GetName;
+    class function Name: string; virtual;
     property Target: TObject read GetTarget;
     property TriggerInfo: TTriggerInfo read FTriggerInfo;
     property ResultInfo: TResultInfo read FRuleResult;
@@ -145,7 +144,7 @@ begin
   Result := FRuleResult.Target;
 end;
 
-class function TRule.GetName: string;
+class function TRule.Name: string;
 begin
   Result := ClassName;
   if AnsiStartsText('T', Result) then
@@ -204,8 +203,8 @@ begin
         ResultInfos.Add(Rule.ResultInfo);
         Result := False;
       end;
-      Rule.Done;
       AfterTriggerRule(Rule);
+      Rule.Done;
     end;
   finally
     Rules.Free;
