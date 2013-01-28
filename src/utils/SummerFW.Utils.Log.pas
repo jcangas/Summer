@@ -7,6 +7,10 @@
 
 /// A logging service totally inspired by Log4J http://logging.apache.org/log4j/1.2/
 
+{TODO: 
+* JSON config
+}
+
 unit SummerFW.Utils.Log;
 
 interface
@@ -21,7 +25,7 @@ type
   type
     Formatter = class;
     Level = TOpenEnum;
-    Event = class
+    Event = record
     public
       TimeStamp: TDateTime;
       ThreadID: TThreadID;
@@ -68,6 +72,7 @@ type
   TLogger = class
   public type
     Childs = TObjectDictionary<string, TLogger>;
+    RequestEvent = reference to procedure (AEvent: Tlog.Event);
   private var
     FName: string;
     FParent: TLogger;
@@ -76,6 +81,7 @@ type
     FLevelAssigned: Boolean;
     FWriters: TLog.Writers;
     FChilds: TLogger.Childs;
+    class var FOnRequestEvent: RequestEvent;
     function GetLevel: TLog.Level;
     procedure SetLevel(const Value: TLog.Level);
     procedure SetAdditivity(const Value: Boolean);
@@ -88,6 +94,8 @@ type
   public
     class function GetRootLogger: TLogger;
     class function GetLogger(Name: string): TLogger;
+    class property OnRequestEvent: RequestEvent read FOnRequestEvent write FOnRequestEvent;
+
     constructor Create(AParent: TLogger; AName: string);
     destructor Destroy;override;
     procedure AddWriter(W: TLog.Writer);
@@ -193,11 +201,21 @@ uses
 { TLog.Formatter }
 
 function TLog.Formatter.Format(Event: TLog.Event): string;
+const
+  FmtSt = '%TS:yyyy mmm dd/% | %TS:hh:nn:ss:zzz/% #%TH [%LV] %CT: %TX';
 begin
-  with Event do
-    Result := SysUtils.Format('%s #%d [%s] %s: %s',
-        [FormatDateTime('yyyy mmm dd "|" hh:nn:ss:zzz', TimeStamp), ThreadID,
-        Level.ToString, Category, Text]);
+  Result := StringReplace(FmtSt, '%TH', IntToStr(Event.ThreadID), [rfReplaceAll]);
+  Result := StringReplace(Result, '%LV', Event.Level.ToString,[rfReplaceAll]);
+  Result := StringReplace(Result, '%CT', Event.Category,[rfReplaceAll]);
+
+  if System.Pos('%TS:', Result) > 0 then begin
+   Result := StringReplace(Result, '%TS:', '"',[rfReplaceAll]);
+   Result := StringReplace(Result, '/%', '"',[rfReplaceAll]);
+   Result := '"' + Result + '"';
+   Result := FormatDateTime(Result, Event.TimeStamp);
+  end;
+
+  Result := StringReplace(Result, '%TX', Event.Text,[rfReplaceAll]);
 end;
 
 { TLog.Writer }
@@ -272,19 +290,16 @@ end;
 
 procedure TLogger.Log(RequestedLevel: TLog.Level; Msg: string);
 var
-  CurrentEvent: TLog.Event;
+  Event: TLog.Event;
 begin
-  CurrentEvent := TLog.Event.Create;
-  try
-    CurrentEvent.Level := RequestedLevel;
-    CurrentEvent.TimeStamp := Now;
-    CurrentEvent.ThreadID := TThread.CurrentThread.ThreadID;
-    CurrentEvent.Category := Category;
-    CurrentEvent.Text:= Msg;
-    Log(CurrentEvent);
-  finally
-    CurrentEvent.Free;
-  end;
+  Event.Level := RequestedLevel;
+  Event.TimeStamp := Now;
+  Event.ThreadID := TThread.CurrentThread.ThreadID;
+  Event.Category := Category;
+  Event.Text:= Msg;
+  if Assigned(FOnRequestEvent) then
+    OnRequestEvent(Event);
+  Log(Event);
 end;
 
 function TLogger.GetLevel: TLog.Level;

@@ -35,12 +35,6 @@ type
     property ID: string read FID;
   end;
 
-  Sync = class
-  public
-    class procedure Lock(obj: TObject; P: TProc);overload;static;
-    class function Lock<T>(obj: TObject; F: TFunc<T>): T;overload;static;
-  end;
-
   TFreeNotifier = class(TComponent)
   private
     FOnfree: TNotifyEvent;
@@ -76,29 +70,6 @@ asm
       MOV   EDX,-1
       JMP   InterlockedAdd
 end;
-
-{ Sync }
-
-class procedure Sync.Lock(obj: TObject; P: TProc);
-begin
-  TMonitor.Enter(obj);
-  try
-    P;
-  finally
-    TMonitor.Exit(obj);
-  end;
-end;
-
-class function Sync.Lock<T>(obj: TObject; F: TFunc<T>): T;
-begin
-  TMonitor.Enter(obj);
-  try
-    Result := F;
-  finally
-    TMonitor.Exit(obj);
-  end;
-end;
-
 
 { TFreeNotifier }
 

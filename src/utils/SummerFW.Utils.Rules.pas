@@ -9,7 +9,7 @@ unit SummerFW.Utils.Rules;
 
 interface
 
-uses Classes, SysUtils, Generics.Defaults, Generics.Collections,
+uses RTTI, Classes, SysUtils, Generics.Defaults, Generics.Collections,
   RegularExpressions, SummerFW.Utils.RTL;
 
 type
@@ -18,7 +18,14 @@ type
 
   TRuleTrigger = TOpenEnum;
   TRuleTriggers = TRuleTrigger.CodeSet;
-  TResultKind = (rsNoTrigger, rsSatisfied, rsIgnored, rsHint, rsWarn, rsFail);
+  /// Kind of Rule result:
+  /// - rsUnknown: the rule was not triggere, so has no Result;
+  /// - rsOk: the Rule was satisfied ok
+  /// - rsIgnore: the Rule was no satisfied because was ignored. Rule message can contain detailed info.
+  /// - rsHint: the Rule was no satisfied because it has a hint message
+  /// - rsWarn: the Rule was no satisfied because it has a rsWarn message
+  /// - rsFail: the Rule was no satisfied because it has a rsFail message
+  TResultKind = (rsUnknown, rsOk, rsIgnore, rsHint, rsWarn, rsFail);
   TRule = class
   type
     TTriggerInfo = record
@@ -69,11 +76,13 @@ type
   strict private
     FRuleEngine: TRuleEngine;
     FTriggerInfo: TTriggerInfo;
-    FRuleResult: TResultInfo;
+    FResultInfo: TResultInfo;
+    FTagValue: TValue;
     function GetTarget: TObject;
   protected
     function GetResultMessage: string; virtual;
     procedure Reset; virtual;
+    procedure SetResultKind(Kind: TResultKind);
     constructor Create(RuleEngine: TRuleEngine; TriggerInfo: TTriggerInfo);
   public
     function Accept(Target: TObject): Boolean; virtual;
@@ -83,7 +92,8 @@ type
     class function Name: string; virtual;
     property Target: TObject read GetTarget;
     property TriggerInfo: TTriggerInfo read FTriggerInfo;
-    property ResultInfo: TResultInfo read FRuleResult;
+    property ResultInfo: TResultInfo read FResultInfo;
+    property TagValue: TValue read FTagValue write FTagValue;
   end;
 
   TRuleEngine = class
@@ -106,11 +116,12 @@ type
     function Satisfy(SubjectFmt: string; Args: array of const;
       ForTrigger: TRuleTrigger; ATarget: TObject; var ResultInfos: TRule.TResultInfos)
       : Boolean; overload;
+    property Registry: TRule.TTriggerInfos read FRegistry;
   end;
 
 implementation
 
-uses StrUtils, DB;
+uses StrUtils;
 
 { TRule }
 
@@ -124,13 +135,13 @@ begin
   inherited Create;
   FRuleEngine := RuleEngine;
   FTriggerInfo := TriggerInfo;
-  FRuleResult.Create(TRuleClass(ClassType));
+  FResultInfo.Create(TRuleClass(ClassType));
   Reset;
 end;
 
 procedure TRule.Done;
 begin
-  FRuleResult.Reset;
+  FResultInfo.Reset;
   Reset;
 end;
 
@@ -141,7 +152,7 @@ end;
 
 function TRule.GetTarget: TObject;
 begin
-  Result := FRuleResult.Target;
+  Result := FResultInfo.Target;
 end;
 
 class function TRule.Name: string;
@@ -156,6 +167,11 @@ end;
 procedure TRule.Reset;
 begin
 
+end;
+
+procedure TRule.SetResultKind(Kind: TResultKind);
+begin
+  FResultInfo.Kind := Kind;
 end;
 
 { TRuleEngine }
@@ -199,6 +215,8 @@ begin
       Rule.ResultInfo.Prepare(Subject, ForTrigger, ATarget);
       BeforeTriggerRule(Rule);
       if not Rule.Satisfied then begin
+        if Rule.ResultInfo.Kind = rsOk then
+          Rule.SetResultKind(rsFail);
         Rule.ResultInfo.SetMessage(Rule.GetResultMessage);
         ResultInfos.Add(Rule.ResultInfo);
         Result := False;
@@ -282,7 +300,7 @@ end;
 
 procedure TRule.TResultInfo.Reset;
 begin
-  FKind := rsNoTrigger;
+  FKind := rsUnknown;
   FTarget := nil;
   FSubject := '';
   FMessage := '';
@@ -299,7 +317,7 @@ begin
   FSubject := Subject;
   FTrigger := Trigger;
   FTarget := Target;
-  FKind := rsSatisfied;
+  FKind := rsOk;
   FMessage := '';
 end;
 
