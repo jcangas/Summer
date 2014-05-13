@@ -674,6 +674,9 @@ begin
       end;
       // write Contents to the stream
       FFileStream.WriteBuffer(Buff, Length(Buff));
+{$IFDEF DEBUG}
+      FlushFileBuffers(FFileStream.Handle);
+{$ENDIF}
     except
       on E: EFileStreamError do
         raise EInOutError.Create(E.Message);
