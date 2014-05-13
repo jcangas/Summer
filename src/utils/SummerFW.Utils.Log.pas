@@ -637,8 +637,8 @@ begin
         // Contents can be represented as ASCII;
         // append the contents in ASCII
 
-        UTFStr := TEncoding.ANSI.GetBytes(Text);
-        UTF8Str := TEncoding.UTF8.GetBytes(Text);
+        UTFStr := TEncoding.ANSI.GetBytes(Text + sLineBreak);
+        UTF8Str := TEncoding.UTF8.GetBytes(Text + sLineBreak);
 
         if TEncoding.UTF8.GetString(UTFStr) = TEncoding.UTF8.GetString(UTF8Str) then begin
           FFileStream.Seek(0, TSeekOrigin.soEnd);
@@ -670,7 +670,7 @@ begin
       // append Contents encoded in UTF-8 to the file
       else begin
         FFileStream.Seek(0, TSeekOrigin.soEnd);
-        Buff := TEncoding.UTF8.GetBytes(Text);
+        Buff := TEncoding.UTF8.GetBytes(Text + sLineBreak);
       end;
       // write Contents to the stream
       FFileStream.WriteBuffer(Buff, Length(Buff));
