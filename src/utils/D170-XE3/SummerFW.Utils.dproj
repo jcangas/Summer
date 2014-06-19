@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{BA21192B-26F1-4A04-8F8E-B82B83403C87}</ProjectGuid>
         <MainSource>SummerFW.Utils.dpk</MainSource>
-        <ProjectVersion>14.4</ProjectVersion>
+        <ProjectVersion>15.4</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
@@ -11,6 +11,11 @@
         <AppType>Package</AppType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Android' and '$(Base)'=='true') or '$(Base_Android)'!=''">
+        <Base_Android>true</Base_Android>
+        <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='OSX32' and '$(Base)'=='true') or '$(Base_OSX32)'!=''">
@@ -64,6 +69,7 @@
     </PropertyGroup>
     <Import Project="Z:\Projects\github\SummerFW4D\src\SummerFW.optset" Condition="'$(Base)'!='' And Exists('Z:\Projects\github\SummerFW4D\src\SummerFW.optset')"/>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <SanitizedProjectName>SummerFW_Utils</SanitizedProjectName>
         <DllSuffix>170</DllSuffix>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
@@ -77,6 +83,10 @@
         <DCC_F>false</DCC_F>
         <DCC_K>false</DCC_K>
         <CfgDependentOn>Z:\Projects\github\SummerFW4D\src\SummerFW.optset</CfgDependentOn>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Android)'!=''">
+        <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=preferExternal;largeHeap=False;theme=TitleBar</VerInfo_Keys>
+        <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_OSX32)'!=''">
         <Debugger_Launcher>/usr/X11/bin/xterm -e &quot;%debuggee%&quot;</Debugger_Launcher>
@@ -116,7 +126,7 @@
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-        <DCC_DebugInformation>false</DCC_DebugInformation>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
@@ -200,6 +210,9 @@
             </Delphi.Personality>
             <Deployment/>
             <Platforms>
+                <Platform value="Android">False</Platform>
+                <Platform value="iOSDevice">False</Platform>
+                <Platform value="iOSSimulator">False</Platform>
                 <Platform value="OSX32">True</Platform>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">True</Platform>
