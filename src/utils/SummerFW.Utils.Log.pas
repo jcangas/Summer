@@ -153,13 +153,27 @@ type
     property Filename: string read FFilename;
   end;
 
-  TStringsLogWriter = class(TWriteTextLogWriter)
+  TMonitoredTextFileLogWriter = class(TTextFileLogWriter)
   private
-    FStrings: TStrings;
+    FMonitor : TMonitor;
+    FFileStream : TFileStream;
+    FFileEncoding : TEncoding;
+    class function GetEncoding(const Stream: TStream): TEncoding; static;
   protected
     procedure DoWriteText(Text: string); override;
   public
-    constructor Create(Strings: TStrings; FormatterClass: TLog.FormatterClass = nil);
+    constructor Create(FileName: string; FormatterClass: TLog.FormatterClass = nil);
+    destructor Destroy; override;
+  end;
+
+  TStringsLogWriter = class(TWriteTextLogWriter)
+  private
+    FStrings: TStrings;
+    FCapacity: Integer;
+  protected
+    procedure DoWriteText(Text: string); override;
+  public
+    constructor Create(Strings: TStrings; const Capacity: Integer = 0; FormatterClass: TLog.FormatterClass = nil);
   end;
 
   TConsoleLogWriter = class(TWriteTextLogWriter)
@@ -196,7 +210,7 @@ implementation
 
 uses
  {$IFDEF MSWINDOWS} Windows, {$ENDIF}
-  RTLConsts, IOUtils;
+  RTLConsts, IOUtils, System.Math;
 
 { TLog.Formatter }
 
@@ -466,15 +480,22 @@ end;
 
 { TStringsLogger }
 
-constructor TStringsLogWriter.Create(Strings: TStrings; FormatterClass: TLog.FormatterClass = nil);
+constructor TStringsLogWriter.Create(Strings: TStrings; const Capacity: Integer = 0; FormatterClass: TLog.FormatterClass = nil);
 begin
   inherited Create(FormatterClass);
   FStrings := Strings;
+  FCapacity := Capacity;
 end;
 
 procedure TStringsLogWriter.DoWriteText(Text: string);
 begin
-  FStrings.Add(Text);
+  TThread.Queue(nil, procedure
+  begin
+    FStrings.Add(Text);
+    if (FCapacity > 0) then
+      while (FCapacity < FStrings.Count) do
+        FStrings.Delete(0);
+  end);
 end;
 
 { TConsoleLogWriter }
@@ -561,6 +582,109 @@ begin
             NoEventData, @ss, PtrToData);
 end;
 {$ENDIF}
+
+{ TMonitoredTextFileLogWriter }
+
+constructor TMonitoredTextFileLogWriter.Create(FileName: string;
+  FormatterClass: TLog.FormatterClass);
+var
+  fileMode : word;
+begin
+  inherited Create(FileName, FormatterClass);
+  if FileExists(Self.Filename) then
+    fileMode := fmOpenReadWrite or fmShareDenyNone
+  else
+    fileMode := fmCreate or fmShareDenyNone;
+  FFileStream := TFileStream.Create(Self.Filename, fileMode);
+  if (fileMode and fmCreate) = fmCreate then
+    FFileEncoding := TEncoding.UTF8
+  else
+    FFileEncoding := GetEncoding(FFileStream);
+end;
+
+
+class function TMonitoredTextFileLogWriter.GetEncoding(const Stream: TStream): TEncoding;
+const
+  CMaxPreambleLen = 4;
+var
+  Buff: TBytes;
+begin
+  Result := nil;
+  Stream.Seek(0, TSeekOrigin.soBeginning);
+  SetLength(Buff, Min(Stream.Size, CMaxPreambleLen));
+  Stream.ReadBuffer(Buff, Length(Buff));
+  TEncoding.GetBufferEncoding(Buff, Result);
+end;
+
+destructor TMonitoredTextFileLogWriter.Destroy;
+begin
+  FFileStream.Free;
+  inherited;
+end;
+
+procedure TMonitoredTextFileLogWriter.DoWriteText(Text: string);
+var
+  Buff: TBytes;
+  Preamble: TBytes;
+  UTFStr: TBytes;
+  UTF8Str: TBytes;
+begin
+  FMonitor.Enter(FFileStream);
+  try
+    try
+      // file is written is ASCII (default ANSI code page)
+      if FFileEncoding = TEncoding.ANSI then begin
+        // Contents can be represented as ASCII;
+        // append the contents in ASCII
+
+        UTFStr := TEncoding.ANSI.GetBytes(Text + sLineBreak);
+        UTF8Str := TEncoding.UTF8.GetBytes(Text + sLineBreak);
+
+        if TEncoding.UTF8.GetString(UTFStr) = TEncoding.UTF8.GetString(UTF8Str) then begin
+          FFileStream.Seek(0, TSeekOrigin.soEnd);
+          //Buff := TEncoding.ANSI.GetBytes(Text);
+          Buff := UTFStr;
+        end
+        // Contents can be represented only in UTF-8;
+        // convert file and Contents encodings to UTF-8
+        else begin
+          // convert file contents to UTF-8
+          FFileStream.Seek(0, TSeekOrigin.soBeginning);
+          SetLength(Buff, FFileStream.Size);
+          FFileStream.ReadBuffer(Buff, Length(Buff));
+          Buff := TEncoding.Convert(FFileEncoding, TEncoding.UTF8, Buff);
+
+          // prepare the stream to rewrite the converted file contents
+          FFileStream.Size := Length(Buff);
+          FFileStream.Seek(0, TSeekOrigin.soBeginning);
+          Preamble := TEncoding.UTF8.GetPreamble;
+          FFileStream.WriteBuffer(Preamble, Length(Preamble));
+          FFileStream.WriteBuffer(Buff, Length(Buff));
+
+          // convert Contents in UTF-8
+          //Buff := TEncoding.UTF8.GetBytes(Contents);
+          Buff := UTF8Str;
+        end;
+      end
+      // file is written either in UTF-8 or Unicode (BE or LE);
+      // append Contents encoded in UTF-8 to the file
+      else begin
+        FFileStream.Seek(0, TSeekOrigin.soEnd);
+        Buff := TEncoding.UTF8.GetBytes(Text + sLineBreak);
+      end;
+      // write Contents to the stream
+      FFileStream.WriteBuffer(Buff, Length(Buff));
+{$IFDEF DEBUG}
+      FlushFileBuffers(FFileStream.Handle);
+{$ENDIF}
+    except
+      on E: EFileStreamError do
+        raise EInOutError.Create(E.Message);
+    end;
+  finally
+    FMonitor.Exit(FFileStream);
+  end;
+end;
 
 initialization
   Logger := TLogger.Create(nil, '');
