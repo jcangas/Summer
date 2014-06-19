@@ -1,4 +1,4 @@
-package SummerFW.DDO;
+package SummerFW.Utils;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,24 +25,17 @@ package SummerFW.DDO;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$LIBSUFFIX '170'}
-{$DESIGNONLY}
-{$IMPLICITBUILD ON}
+{$LIBSUFFIX '190'}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,
-  dbrtl,
-  DbxCommonDriver,
-  dbexpress,
-  SummerFW.Utils;
+  dbrtl;
 
 contains
-  SummerFW.DDO.CallBack in '..\SummerFW.DDO.CallBack.pas',
-  SummerFW.DDO.DBXDriver in '..\SummerFW.DDO.DBXDriver.pas',
-  SummerFW.DDO.Mappers in '..\SummerFW.DDO.Mappers.pas',
-  SummerFW.DDO.OQL in '..\SummerFW.DDO.OQL.pas',
-  SummerFW.DDO.State in '..\SummerFW.DDO.State.pas',
-  SummerFW.DDO.Store in '..\SummerFW.DDO.Store.pas',
-  SummerFW.DDO.StoreInfo in '..\SummerFW.DDO.StoreInfo.pas';
+  SummerFW.Utils.CLI in '..\SummerFW.Utils.CLI.pas',
+  SummerFW.Utils.Log in '..\SummerFW.Utils.Log.pas',
+  SummerFW.Utils.RTL in '..\SummerFW.Utils.RTL.pas',
+  SummerFW.Utils.Rules in '..\SummerFW.Utils.Rules.pas';
 
 end.

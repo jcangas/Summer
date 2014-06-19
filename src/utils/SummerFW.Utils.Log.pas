@@ -209,8 +209,9 @@ var
 implementation
 
 uses
- {$IFDEF MSWINDOWS} Windows, {$ENDIF}
-  RTLConsts, IOUtils, System.Math;
+ {$IFDEF MSWINDOWS} WinApi.Windows, {$ENDIF}
+  System.RTLConsts, System.IOUtils,
+  System.Math;
 
 { TLog.Formatter }
 
@@ -592,10 +593,10 @@ var
 begin
   inherited Create(FileName, FormatterClass);
   if FileExists(Self.Filename) then
-    fileMode := fmOpenReadWrite or fmShareDenyNone
+    fileMode := fmOpenReadWrite
   else
-    fileMode := fmCreate or fmShareDenyNone;
-  FFileStream := TFileStream.Create(Self.Filename, fileMode);
+    fileMode := fmCreate;
+  FFileStream := TFileStream.Create(Self.Filename, fileMode, fmShareDenyNone);
   if (fileMode and fmCreate) = fmCreate then
     FFileEncoding := TEncoding.UTF8
   else
@@ -674,9 +675,6 @@ begin
       end;
       // write Contents to the stream
       FFileStream.WriteBuffer(Buff, Length(Buff));
-{$IFDEF DEBUG}
-      FlushFileBuffers(FFileStream.Handle);
-{$ENDIF}
     except
       on E: EFileStreamError do
         raise EInOutError.Create(E.Message);

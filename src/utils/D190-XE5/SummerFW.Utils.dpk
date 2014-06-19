@@ -5,7 +5,7 @@ package SummerFW.Utils;
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
+{$DEBUGINFO OFF}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
@@ -25,9 +25,8 @@ package SummerFW.Utils;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$LIBSUFFIX '170'}
-{$RUNONLY}
-{$IMPLICITBUILD ON}
+{$LIBSUFFIX '200'}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,
@@ -35,7 +34,6 @@ requires
 
 contains
   SummerFW.Utils.CLI in '..\SummerFW.Utils.CLI.pas',
-  SummerFW.Utils.Collections in '..\SummerFW.Utils.Collections.pas',
   SummerFW.Utils.Log in '..\SummerFW.Utils.Log.pas',
   SummerFW.Utils.RTL in '..\SummerFW.Utils.RTL.pas',
   SummerFW.Utils.Rules in '..\SummerFW.Utils.Rules.pas';
