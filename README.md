@@ -7,8 +7,6 @@
 
 * A Business Rule Engine bassed on the Strategy Pattern
 
-* DDO: An ORM Persistence Engine inspired by Java Data Objects
-
 * Other minor, but useful, features: 
-  + IList: interfaced Lists
   + Some utils to develop Command Line Interfaces
+  + Some useful libs as TOpenEnum & TFreeNotifier
