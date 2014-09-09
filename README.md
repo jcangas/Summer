@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/jcangas/SummerFW4D.png?label=ready&title=Ready)](https://waffle.io/jcangas/SummerFW4D)
 
 ## Overview
 
