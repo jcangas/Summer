@@ -1,13 +1,45 @@
-out
-__history
+#----------------
+# O.S. related
+#----------------
+*.lib
+*.obj
+*.exe
+*.dll
+*.~*
+*.bak
+Thumbs.db
+.DS_Store
+
+#----------------
+# SCM related
+#----------------
+.svn
+
+#----------------
+# Delphi related
+#----------------
+*.bpl
+*.bpi
+*.dcu
+*.dcp
 *.local
 *.identcache
+__history
 *.tvsconfig
 *.dsk
-*.bak
-*.~*
+ModelSupport_*
+LibrarySupport
+
+#----------------
+# DelphiVM related
+#----------------
+msbuild.log
+*.notes.html
+/out
+/vendor
 /ship
-/assets
-/_site
-/_includes
-/.DS_Store
+
+#----------------
+# Project related
+#----------------
+deprecated
