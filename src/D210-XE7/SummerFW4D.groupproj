@@ -3,7 +3,7 @@
         <ProjectGuid>{5111C037-EA2C-43E0-9EFA-43869748884C}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="..\utils\D200-XE6\SummerFW.Utils.dproj">
+        <Projects Include="..\utils\D210-XE7\SummerFW.Utils.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>

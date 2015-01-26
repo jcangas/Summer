@@ -37,53 +37,52 @@ type
 
   TFreeNotifier = class(TComponent)
   private
-    FOnfree: TNotifyEvent;
-  published
+    FOnFreeNotification: TProc<TComponent>;
+    FOnDestroy: TProc<TComponent>;
+  protected
+    procedure DoOnDestroy;virtual;
+    procedure DoOnFree(Sender: TComponent); virtual;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
-    constructor Create(AOwner: TObject); reintroduce;
-    property OnFree: TNotifyEvent read FOnfree write FOnFree;
     destructor Destroy; override;
+    property OnFreeNotification: TProc<TComponent> read FOnFreeNotification write FOnFreeNotification;
+    property OnDestroy: TProc<TComponent> read FOnDestroy write FOnDestroy;
   end;
 
-function InterlockedIncrement(var Addend: Integer): Integer;
-function InterlockedDecrement(var Addend: Integer): Integer;
+
 
 implementation
 
-// copied from System Unit
-function InterlockedAdd(var Addend: Integer; Increment: Integer): Integer;
-asm
-      MOV   ECX,EAX
-      MOV   EAX,EDX
- LOCK XADD  [ECX],EAX
-      ADD   EAX,EDX
-end;
-
-function InterlockedIncrement(var Addend: Integer): Integer;
-asm
-      MOV   EDX,1
-      JMP   InterlockedAdd
-end;
-
-function InterlockedDecrement(var Addend: Integer): Integer;
-asm
-      MOV   EDX,-1
-      JMP   InterlockedAdd
-end;
 
 { TFreeNotifier }
 
-constructor TFreeNotifier.Create(AOwner: TObject);
-begin
-  inherited Create(AOwner as TComponent);
-end;
-
 destructor TFreeNotifier.Destroy;
 begin
-  if Assigned(FOnFree) then
-    FOnfree(Self);
+  DoOnDestroy;
+  FOnFreeNotification := nil;
+  FOnDestroy := nil;
   inherited;
 end;
+
+procedure TFreeNotifier.DoOnFree(Sender: TComponent);
+begin
+  if Assigned(FOnFreeNotification) then
+    FOnFreeNotification(Self);
+end;
+
+procedure TFreeNotifier.DoOnDestroy;
+begin
+  if Assigned(FOnDestroy) then
+    FOnDestroy(Self);
+end;
+
+procedure TFreeNotifier.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  if Operation = opRemove then
+    DoOnFree(AComponent);
+  inherited;
+end;
+
 
 { TEnumerated}
 

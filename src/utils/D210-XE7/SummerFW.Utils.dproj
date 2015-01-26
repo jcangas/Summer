@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{C153B219-4473-4085-B8E7-9E03D606FE86}</ProjectGuid>
         <MainSource>SummerFW.Utils.dpk</MainSource>
-        <ProjectVersion>16.0</ProjectVersion>
+        <ProjectVersion>15.4</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
