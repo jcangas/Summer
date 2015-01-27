@@ -65,12 +65,13 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <Import Project="..\..\src.optset" Condition="'$(Base)'!='' And Exists('..\..\src.optset')"/>
+    <Import Project="..\..\source.optset" Condition="'$(Base)'!='' And Exists('..\..\source.optset')"/>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <GenDll>true</GenDll>
         <SanitizedProjectName>SummerFW_Utils</SanitizedProjectName>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
-        <DllSuffix>200</DllSuffix>
+        <DllSuffix>210</DllSuffix>
         <VerInfo_Locale>3082</VerInfo_Locale>
         <GenPackage>true</GenPackage>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
@@ -81,7 +82,7 @@
         <DCC_S>false</DCC_S>
         <DCC_F>false</DCC_F>
         <DCC_K>false</DCC_K>
-        <CfgDependentOn>..\..\src.optset</CfgDependentOn>
+        <CfgDependentOn>..\..\source.optset</CfgDependentOn>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <DCC_CBuilderOutput>None</DCC_CBuilderOutput>
@@ -139,6 +140,7 @@
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
         <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
+    <Import Project="..\..\src.optset" Condition="'$(Base)'!='' And Exists('..\..\src.optset')"/>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
@@ -151,14 +153,14 @@
         <DCCReference Include="..\SummerFW.Utils.Rules.pas"/>
         <DCCReference Include="..\SummerFW.Utils.DuckIntf.pas"/>
         <DCCReference Include="..\SummerFW.Utils.SICO.pas"/>
-        <DCCReference Include="..\SummerFW.Utils.StdAppPaths.pas"/>
+        <DCCReference Include="..\SummerFW.Utils.StdPaths.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
-            <DependentOn>..\..\src.optset</DependentOn>
+            <DependentOn>..\..\source.optset</DependentOn>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
@@ -174,7 +176,8 @@
                     <Source Name="MainSource">SummerFW.Utils.dpk</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="Z:\Projects\work\ipadtaller\vendor\imports\D200\Win32\Debug\bin\dclFMXfsADO20.bpl">FastScript 1.9 FMX ADO Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k210.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp210.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
                 <VersionInfo>
                     <VersionInfo Name="IncludeVerInfo">True</VersionInfo>

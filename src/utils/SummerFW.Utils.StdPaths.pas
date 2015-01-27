@@ -1,4 +1,4 @@
-unit SummerFW.Utils.StdAppPaths;
+unit SummerFW.Utils.StdPaths;
 
 interface
 
