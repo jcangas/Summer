@@ -1,0 +1,58 @@
+package SummerFW.DDD;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  dbrtl,
+  fmx,
+  bindengine,
+  bindcomp,
+  bindcompfmx,
+  PureMVC,
+  SummerFW.Utils,
+  FireDACCommon,
+  FireDACCommonDriver,
+  FireDAC,
+  FireDACSqliteDriver,
+  fmxFireDAC;
+
+contains
+  SummerFW.DDD.AppFacade in '..\DDD\SummerFW.DDD.AppFacade.pas',
+  SummerFW.DDD.IAppFacade in '..\DDD\SummerFW.DDD.IAppFacade.pas',
+  SummerFW.DDD.IStore in '..\DDD\SummerFW.DDD.IStore.pas',
+  SummerFW.DDD.Query in '..\DDD\SummerFW.DDD.Query.pas',
+  SummerFW.DDD.Repository in '..\DDD\SummerFW.DDD.Repository.pas',
+  SummerFW.DDD.Utils in '..\DDD\SummerFW.DDD.Utils.pas',
+  SummerFW.DDD.Validator in '..\DDD\SummerFW.DDD.Validator.pas',
+  SummerFW.DDD.View in '..\DDD\SummerFW.DDD.View.pas' {CoreView},
+  SummerFW.DDD.ViewModel in '..\DDD\SummerFW.DDD.ViewModel.pas',
+  SummerFW.DDD.Store in '..\DDD\SummerFW.DDD.Store.pas';
+
+end.
+

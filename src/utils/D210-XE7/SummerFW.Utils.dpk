@@ -25,8 +25,7 @@ package SummerFW.Utils;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$LIBSUFFIX '210'}
-{$RUNONLY}
+{$LIBSUFFIX '200'}
 {$IMPLICITBUILD OFF}
 
 requires
@@ -40,6 +39,6 @@ contains
   SummerFW.Utils.Rules in '..\SummerFW.Utils.Rules.pas',
   SummerFW.Utils.DuckIntf in '..\SummerFW.Utils.DuckIntf.pas',
   SummerFW.Utils.SICO in '..\SummerFW.Utils.SICO.pas',
-  SummerFW.Utils.StdPaths in '..\SummerFW.Utils.StdPaths.pas';
+  SummerFW.Utils.StdAppPaths in '..\SummerFW.Utils.StdAppPaths.pas';
 
 end.

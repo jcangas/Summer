@@ -1,0 +1,16 @@
+﻿[PrototypeModel]
+Visible=False
+Coordinates=10,10,78,69
+
+[Layout]
+Coordinates=98,10,48,33
+
+[BindSource]
+Coordinates=10,10,78,69
+
+[ActionList]
+Coordinates=78,88,64,33
+
+[BindingsList]
+Coordinates=107,62,82,33
+
