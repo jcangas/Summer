@@ -5,14 +5,14 @@
   Your reuse is governed by the Creative Commons Attribution 3.0 License
 }
 
-unit SummerFW.Utils.CLI;
+unit SummerFW.CLI;
 
 interface
 
 uses Classes, SysUtils, RTTI;
 
 type
-  // Command Line Interface
+  /// Win Command Line Interface. EXPERIMENTAL
   CLI = class(TObject)
   public type
     TConsoleMode = (cmUnknown, cmConsoleApp, cmFromParent, cmAllocated, cmGUIApp);
@@ -113,6 +113,7 @@ end;
 
 class function CLI.CreateConsole: Boolean;
 begin
+  if FConsoleMode = cmAllocated then Exit(True);
   Result := AllocConsole;
   if Result then FConsoleMode := cmAllocated;
 end;
@@ -130,7 +131,7 @@ var
   HasConsole: Boolean;
 begin
   HasConsole := not (coForceNew in Options) and (ConsoleApp or AttachParentConsole)
-            or ((coAllocate in Options) and CreateConsole);
+            or (FConsoleMode = cmAllocated) or ((coAllocate in Options) and CreateConsole);
   if not HasConsole then begin
     FConsoleMode := cmGUIApp;
     if (coRequired in Options)then

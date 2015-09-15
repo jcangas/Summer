@@ -1,7 +1,6 @@
-
 // A Simple Injection Container
 
-unit SummerFW.Utils.SICO;
+unit SummerFW.SICO;
 
 interface
 
@@ -14,6 +13,7 @@ uses
 
 type
   TDIContainer = class;
+
   TDIRule = class(TObject)
   private
     class var FRTTIContext: TRTTIContext;
@@ -22,19 +22,23 @@ type
     FImplementorType: PTypeInfo;
     FServiceType: PTypeInfo;
     FName: string;
+    FIsSingleton: Boolean;
     FOnCreate: TFunc<TObject>;
+    FSingleton: TObject;
   private
     class function GetRTTI(Info: PTypeInfo): TRTTIType;
     constructor Create(Container: TDIContainer; ImplementorType: PTypeInfo);
-    function ForServiceType(const AType: PTypeInfo; const Name: string = ''): TDIRule;
+    function ForServiceType(const AType: PTypeInfo;
+      const Name: string = ''): TDIRule;
     function Build: TValue;
     function DefaultOnCreate: TObject;
-  public
-    destructor Destroy; override;
-    function Factory(Builder: TFunc<TObject>): TDIRule;
     property Name: string read FName;
     property ImplementorType: PTypeInfo read FImplementorType;
     property ServiceType: PTypeInfo read FServiceType;
+    property IsSingleton: Boolean read FIsSingleton write FIsSingleton;
+  public
+    destructor Destroy; override;
+    function Factory(Builder: TFunc<TObject>): TDIRule;
   end;
 
   TDIRuleList = class(TStringList)
@@ -59,13 +63,14 @@ type
     // Fluent api
     function ForService<TService>(const Name: string = ''): TDIRule<T>;
     function Factory(Builder: TFunc<T>): TDIRule<T>;
+    function AsSingleton: TDIRule<T>;
   end;
 
   TDIRules = TObjectDictionary<PTypeInfo, TDIRuleList>;
 
   TDIContainer = class
-  private class var
-    FDIContainer: TDIContainer;
+  private
+    class var FDIContainer: TDIContainer;
   strict private
     FDIRules: TDIRules;
     function GetRules(ServiceType: PTypeInfo): TDIRuleList;
@@ -84,9 +89,10 @@ type
     function GetService<TService>(Name: string = ''): TService;
   end;
 
-function SICO: TDIContainer;inline;
+function SICO: TDIContainer; inline;
 
 implementation
+uses SummerFW.Utils;
 
 function SICO: TDIContainer;
 begin
@@ -98,8 +104,20 @@ end;
 function TDIRule.Build: TValue;
 var
   Instance: TObject;
+  Intf: IInterface;
 begin
-  Instance := FOnCreate;
+  if IsSingleton and Assigned(FSingleton) then
+    Instance := FSingleton
+  else
+  begin
+    Instance := FOnCreate;
+    if IsSingleton then
+    begin
+      FSingleton := Instance;
+      if Supports(Instance, IInterface, Intf) then
+        Intf._AddRef;
+    end;
+  end;
   TValue.Make(@Instance, FImplementorType, Result);
 end;
 
@@ -113,38 +131,30 @@ end;
 
 function TDIRule.DefaultOnCreate: TObject;
 var
-  Method: TRTTIMethod;
-  DefaultCtor: TRTTIMethod;
-  Klass: TClass;
-  RType: TRttiInstanceType;
+  AClass: TClass;
 begin
-  DefaultCtor := nil;
-  RType := GetRTTI(ImplementorType) as TRttiInstanceType;
-  for Method in RType.GetMethods do begin
-    if not Method.IsConstructor then Continue;
-    if Length(Method.GetParameters) > 0 then Continue;
-    // Prefer first ctor and prefer the first named Create
-    if not Assigned(DefaultCtor) then DefaultCtor := Method;
-    if SameText(Method.Name, 'Create') then begin
-      DefaultCtor := Method;
-      Break;
-    end;
-  end;
-  if not Assigned(DefaultCtor) then
-      raise Exception.CreateFmt('No default Constructor found for type %s', [RType.QualifiedName]);
-  Klass := RType.MetaclassType;
-  Result := DefaultCtor.Invoke(Klass, []).AsObject;
+  AClass := (GetRTTI(ImplementorType) as TRttiInstanceType).MetaclassType;
+  Result := AClass.InvokeDefaultCtor;
 end;
 
 destructor TDIRule.Destroy;
+var
+  Intf: IInterface;
 begin
   // workaround for compiler bug: FBuilder is not released !
   TFunc<TObject>(FOnCreate) := nil;
-
+  if IsSingleton then
+  begin
+    if Supports(FSingleton, IInterface, Intf) then
+      Intf._Release
+    else
+      FSingleton.Free;
+  end;
   inherited;
 end;
 
-function TDIRule.ForServiceType(const AType: PTypeInfo; const Name: string): TDIRule;
+function TDIRule.ForServiceType(const AType: PTypeInfo;
+  const Name: string): TDIRule;
 begin
   FContainer.BeforeUpdate(Self);
   Result := Self;
@@ -165,6 +175,12 @@ begin
 end;
 
 { TDIRule<T> }
+
+function TDIRule<T>.AsSingleton: TDIRule<T>;
+begin
+  Result := Self;
+  Result.IsSingleton := True;
+end;
 
 constructor TDIRule<T>.Create(Container: TDIContainer);
 begin
@@ -196,28 +212,52 @@ begin
   inherited;
 end;
 
+function TDIContainer.Returns<T>: TDIRule<T>;
+begin
+  TMonitor.Enter(Self);
+  try
+    Result := TDIRule<T>.Create(Self);
+    Result.ForServiceType(TypeInfo(T));
+  finally
+    TMonitor.Exit(Self);
+  end;
+end;
+
 function TDIContainer.GetService<TService>(Name: string = ''): TService;
 var
   Instance: TValue;
   Rule: TDIRule;
   RService: TRTTIType;
 begin
-  RService := TDIRule.GetRTTI(TypeInfo(TService));
-  Rule := FindRule(RService.Handle, name);
-  Instance := Rule.Build;
-  if (RService is TRttiInterfaceType) and (Instance.IsType<TVirtualInterface>) then
+  TMonitor.Enter(Self);
+  try
+    RService := TDIRule.GetRTTI(TypeInfo(TService));
+    Rule := FindRule(RService.Handle, Name);
+    Instance := Rule.Build;
+    // No usar TValue.IsType !!!
+   // if (RService is TRttiInterfaceType) and (Instance.IsType<TVirtualInterface>)
+   // Si se usa IsType en combinación con RT pacakges, se produce un AV si se ejecuta
+   // desde el IDE en modo Debug !!!!!
+    if (RService is TRttiInterfaceType) and (Instance.AsObject is TVirtualInterface)
+    then
       Supports(Instance.AsObject, TRttiInterfaceType(RService).GUID, Result)
-  else Result := Instance.AsType<TService>;
+    else
+      Result := Instance.AsType<TService>;
+  finally
+    TMonitor.Exit(Self);
+  end;
 end;
 
 function TDIContainer.GetRules(ServiceType: PTypeInfo): TDIRuleList;
 begin
-  if FDIRules.TryGetValue(ServiceType, Result) then Exit;
+  if FDIRules.TryGetValue(ServiceType, Result) then
+    Exit;
   Result := TDIRuleList.Create(ServiceType);
   FDIRules.Add(ServiceType, Result);
 end;
 
-function TDIContainer.FindRule(ServiceType: PTypeInfo; Name: string = ''): TDIRule;
+function TDIContainer.FindRule(ServiceType: PTypeInfo;
+  Name: string = ''): TDIRule;
 begin
   Result := Self[ServiceType][name];
 end;
@@ -237,15 +277,10 @@ begin
   Self[Rule.ServiceType].RemoveRule(Rule);
 end;
 
-function TDIContainer.Returns<T>: TDIRule<T>;
-begin
-  Result := TDIRule<T>.Create(Self);
-  Result.ForServiceType(TypeInfo(T));
-end;
-
 procedure TDIContainer.BeforeUpdate(Rule: TDIRule);
 begin
-  if ContainsRule(Rule) then RemoveRule(Rule);
+  if ContainsRule(Rule) then
+    RemoveRule(Rule);
 end;
 
 procedure TDIContainer.AfterUpdate(Rule: TDIRule);
@@ -267,7 +302,8 @@ destructor TDIRuleList.Destroy;
 var
   I: Integer;
 begin
-  for I := 0 to Count - 1 do Objects[I].DisposeOf;
+  for I := 0 to Count - 1 do
+    Objects[I].DisposeOf;
   inherited;
 end;
 
@@ -280,7 +316,8 @@ procedure TDIRuleList.RemoveRule(Rule: TDIRule);
 var
   Pos: Integer;
 begin
-  if not Find(Rule.Name, Pos) then Exit;
+  if not Find(Rule.Name, Pos) then
+    Exit;
   Delete(Pos);
 end;
 
@@ -293,20 +330,25 @@ function TDIRuleList.GetRule(const Name: string): TDIRule;
 begin
   Result := FindRule(name);
   if not Assigned(Result) then
-      raise Exception.CreateFmt('Dependency Injection Rule for %s<%s> not found', [name, ServiceType.Name]);
+    raise Exception.CreateFmt('Dependency Injection Rule for %s<%s> not found',
+      [name, ServiceType.Name]);
 end;
 
 function TDIRuleList.FindRule(const Name: string): TDIRule;
 var
   Pos: Integer;
 begin
-  if not Find(name, Pos) then Exit(nil);
+  if not Find(name, Pos) then
+    Exit(nil);
   Result := Objects[Pos] as TDIRule;
 end;
 
 initialization
-  TDIContainer.FDIContainer := TDIContainer.Create;
 
-finalization;
-  TDIContainer.FDIContainer.Free;
+TDIContainer.FDIContainer := TDIContainer.Create;
+
+finalization
+
+TDIContainer.FDIContainer.Free;
+
 end.

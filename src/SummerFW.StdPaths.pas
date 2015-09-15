@@ -1,11 +1,11 @@
-unit SummerFW.Utils.StdPaths;
+unit SummerFW.StdPaths;
 
 interface
 
 uses
   System.TypInfo,
   System.Rtti,
-  SummerFW.Utils.DuckIntf;
+  SummerFW.DuckIntf;
 
 type
   IStandardPaths = interface(IInvokable)
@@ -84,11 +84,24 @@ type
     constructor Create(const RootPath: string);
   end;
 
+function ToStandardPath(const Path: string): string;
+function ToPlatformPath(const Path: string): string;
 implementation
 
 uses
   System.SysUtils,
   System.IOUtils;
+
+function ToStandardPath(const Path: string): string;
+begin
+  Result := StringReplace(Path, TPath.DirectorySeparatorChar, '/',
+    [rfReplaceAll]);
+end;
+
+function ToPlatformPath(const Path: string): string;
+begin
+  Result := StringReplace(Path, '/', TPath.DirectorySeparatorChar, [rfReplaceAll]);
+end;
 
 { TStandardPaths }
 
@@ -117,6 +130,8 @@ end;
 function TStandardPaths.FullExeName(const NewExtension: string = '*'): string;
 begin
   Result := ParamStr(0);
+  if Result.IsEmpty then Exit; // ParamStr(0) don't works in all platforms
+  
   if NewExtension = '*' then
     Exit;
   if NewExtension = '' then
@@ -131,18 +146,20 @@ end;
 
 function TStandardPaths.ToStandardPath(const Path: string): string;
 begin
-  Result := StringReplace(Path, TPath.DirectorySeparatorChar, '/',
-    [rfReplaceAll]);
+  Result := SummerFW.StdPaths.ToStandardPath(Path);
 end;
 
 function TStandardPaths.ToPlatformPath(const Path: string): string;
 begin
-  Result := StringReplace(Path, '/', TPath.DirectorySeparatorChar, [rfReplaceAll]);
+  Result := SummerFW.StdPaths.ToPlatformPath(Path);
 end;
 
 procedure TStandardPaths.SetRootPath(const Value: string);
 begin
-  FRootPath := TPath.GetFullPath(TPath.Combine(BinPath, ToPlatformPath(Value)));
+  if TPath.IsRelativePath(Value) and not BinPath.IsEmpty then
+    FRootPath := TPath.GetFullPath(TPath.Combine(BinPath, ToPlatformPath(Value)))
+  else
+    FRootPath := Value;
 end;
 
 function TStandardPaths.ExpandPath(const Path: string): string;
@@ -159,7 +176,8 @@ function TStandardPaths.BinPath(const NestedPath: string): string;
 begin
   // BinPath is fixed by EXE path
   Result := TPath.GetDirectoryName(FullExeName);
-  Result := ToPlatformPath(TPath.Combine(Result, NestedPath));end;
+  Result := ToPlatformPath(TPath.Combine(Result, NestedPath));
+end;
 
 function TStandardPaths.TempPath(const NestedPath: string = ''): string;
 begin

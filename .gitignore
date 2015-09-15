@@ -1,8 +1,6 @@
 #----------------
 # O.S. related
 #----------------
-*.lib
-*.obj
 *.exe
 *.dll
 *.~*
@@ -18,8 +16,6 @@ Thumbs.db
 #----------------
 # Delphi related
 #----------------
-*.bpl
-*.bpi
 *.dcu
 *.dcp
 *.local
@@ -43,3 +39,4 @@ msbuild.log
 # Project related
 #----------------
 deprecated
+*.stat
