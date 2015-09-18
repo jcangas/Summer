@@ -5,7 +5,7 @@
   Your reuse is governed by the Creative Commons Attribution 3.0 License
 }
 
-unit SummerFW.Utils;
+unit Summer.Utils;
 
 interface
 
@@ -205,7 +205,7 @@ type
 implementation
 
 uses
-  SummerFW.Config,
+  Summer.Config,
 {$IF DEFINED(IOS)}
   iOSapi.Foundation,
 {$ENDIF}
@@ -405,7 +405,7 @@ begin
   Result := ArgsMatch([], Quality);
 end;
 
-class function TMethodVoter.ArgsMatch(const SomeArgs: TArray<TValue>; Quality: TVoteQuality): TVoteFunc;
+class function TMethodVoter.ArgsMatch(const SomeArgs: TArray<TValue>; Quality: TVoteQuality = vqRequires): TVoteFunc;
 var
   CopyArgs: TArray<TValue>;
 begin
@@ -691,8 +691,10 @@ end;
 
 class function TOSShell.Open(Command: string; Parameters: string = '';
   const Mode: TShowMode = Normal): Integer;
+{$IF DEFINED(MSWINDOWS)}
 const
   SWMODE: array [TShowMode] of ShortInt = (SW_HIDE, SW_SHOWNORMAL);
+{$ENDIF}
 begin
 {$IF DEFINED(MSWINDOWS)}
   Result := ShellExecute(0, 'OPEN', PChar(Command), PChar(Parameters), '',

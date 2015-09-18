@@ -34,16 +34,16 @@ requires
   dbrtl;
 
 contains
-  SummerFW.CLI in '..\SummerFW.CLI.pas',
-  SummerFW.Config in '..\SummerFW.Config.pas',
-  SummerFW.DuckIntf in '..\SummerFW.DuckIntf.pas',
-  SummerFW.IConfig in '..\SummerFW.IConfig.pas',
-  SummerFW.ILogger in '..\SummerFW.ILogger.pas',
-  SummerFW.IWinSvcCtrl in '..\SummerFW.IWinSvcCtrl.pas',
-  SummerFW.Logger in '..\SummerFW.Logger.pas',
-  SummerFW.SICO in '..\SummerFW.SICO.pas',
-  SummerFW.StdPaths in '..\SummerFW.StdPaths.pas',
-  SummerFW.Utils in '..\SummerFW.Utils.pas',
-  SummerFW.WinSvcCtrl in '..\SummerFW.WinSvcCtrl.pas';
+  Summer.CLI in '..\Summer.CLI.pas',
+  Summer.Config in '..\Summer.Config.pas',
+  Summer.DuckIntf in '..\Summer.DuckIntf.pas',
+  Summer.IConfig in '..\Summer.IConfig.pas',
+  Summer.ILogger in '..\Summer.ILogger.pas',
+  Summer.Win.ISvcCtrl in '..\Summer.Win.ISvcCtrl.pas',
+  Summer.Logger in '..\Summer.Logger.pas',
+  Summer.SICO in '..\Summer.SICO.pas',
+  Summer.StdPaths in '..\Summer.StdPaths.pas',
+  Summer.Utils in '..\Summer.Utils.pas',
+  Summer.Win.SvcCtrl in '..\Summer.Win.SvcCtrl.pas';
 
 end.

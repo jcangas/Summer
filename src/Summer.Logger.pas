@@ -11,7 +11,7 @@
   * JSON config
 }
 
-unit SummerFW.Logger;
+unit Summer.Logger;
 
 interface
 
@@ -19,8 +19,8 @@ uses
   Classes,
   SysUtils,
   Generics.Collections,
-  SummerFW.Utils,
-  SummerFW.ILogger;
+  Summer.Utils,
+  Summer.ILogger;
 
 type
   TLogger = class(TInterfacedObject, ILogger)

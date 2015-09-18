@@ -5,7 +5,7 @@
   Your reuse is governed by the Creative Commons Attribution 3.0 License
 }
 
-unit SummerFW.CLI;
+unit Summer.CLI;
 
 interface
 

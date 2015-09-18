@@ -1,4 +1,4 @@
-unit SummerFW.IConfig;
+unit Summer.IConfig;
 
 interface
 

@@ -1,10 +1,10 @@
-unit SummerFW.WinSvcCtrl;
+unit Summer.Win.SvcCtrl;
 
 interface
 
 uses
   System.Classes,
-  SummerFW.IWinSvcCtrl;
+  Summer.Win.ISvcCtrl;
 
 type
   TWinServiceControl = class(TInterfacedObject, IWinServiceControl)
@@ -36,7 +36,7 @@ uses
 {$IFDEF MSWINDOWS}
   WinApi.WinSvc,
 {$ENDIF MSWINDOWS}
-  SummerFW.Utils;
+  Summer.Utils;
 
 { WinServiceControl }
 

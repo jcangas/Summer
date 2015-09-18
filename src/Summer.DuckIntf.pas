@@ -1,4 +1,4 @@
-unit SummerFW.DuckIntf;
+unit Summer.DuckIntf;
 
 interface
 uses

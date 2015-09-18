@@ -1,11 +1,11 @@
-unit SummerFW.StdPaths;
+unit Summer.StdPaths;
 
 interface
 
 uses
   System.TypInfo,
   System.Rtti,
-  SummerFW.DuckIntf;
+  Summer.DuckIntf;
 
 type
   IStandardPaths = interface(IInvokable)
@@ -146,12 +146,12 @@ end;
 
 function TStandardPaths.ToStandardPath(const Path: string): string;
 begin
-  Result := SummerFW.StdPaths.ToStandardPath(Path);
+  Result := Summer.StdPaths.ToStandardPath(Path);
 end;
 
 function TStandardPaths.ToPlatformPath(const Path: string): string;
 begin
-  Result := SummerFW.StdPaths.ToPlatformPath(Path);
+  Result := Summer.StdPaths.ToPlatformPath(Path);
 end;
 
 procedure TStandardPaths.SetRootPath(const Value: string);

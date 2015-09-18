@@ -1,4 +1,4 @@
-unit SummerFW.Config;
+unit Summer.Config;
 
 interface
 uses System.JSON,
@@ -6,7 +6,7 @@ uses System.JSON,
   System.IOUtils,
   System.Classes,
   System.Rtti,
-  SummerFW.IConfig;
+  Summer.IConfig;
 
 type
   TJSONProperties = class(TInterfacedObject)
@@ -55,7 +55,7 @@ type
 
 implementation
 uses
-  SummerFW.Utils;
+  Summer.Utils;
 
 constructor TJSONProperties.Create(Values: TJSONObject; const OwnValues: Boolean);
 begin
@@ -93,7 +93,7 @@ begin
   // but don't honors Pair.GetOwned
   for Pair in Self do begin
     if Pair.GetOwned then
-        Pair.Free;
+        Pair.DisposeOf;
   end;
   FJSONObject.SetPairs(nil);
   FJSONObject.Create;

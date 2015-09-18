@@ -1,4 +1,4 @@
-unit SummerFW.IWinSvcCtrl;
+unit Summer.Win.ISvcCtrl;
 
 interface
 

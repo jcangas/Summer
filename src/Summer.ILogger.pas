@@ -12,7 +12,7 @@
 }
 
 
-unit SummerFW.ILogger;
+unit Summer.ILogger;
 
 interface
 
@@ -20,7 +20,7 @@ uses
   Classes,
   SysUtils,
   Generics.Collections,
-  SummerFW.Utils;
+  Summer.Utils;
 
 type
 

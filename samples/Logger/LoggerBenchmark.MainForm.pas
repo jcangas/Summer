@@ -1,11 +1,11 @@
-unit TestLogger.MainForm;
+unit LoggerBenchmark.MainForm;
 
 interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
-  SummerFW.Utils.ILogger, FMX.Layouts, FMX.Memo, FMX.Controls.Presentation,
+  Summer.ILogger, FMX.Layouts, FMX.Memo, FMX.Controls.Presentation,
   FMX.Edit, FMX.EditBox, FMX.NumberBox;
 
 type
@@ -43,8 +43,8 @@ implementation
 uses
   System.Diagnostics,
   System.IOUtils,
-  SummerFW.Utils.CLI,
-  SummerFW.Utils.Logger;
+  Summer.CLI,
+  Summer.Logger;
 
 {$R *.fmx}
 
