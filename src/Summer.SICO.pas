@@ -9,11 +9,14 @@ uses
   System.TypInfo,
   System.RTTI,
   System.SysUtils,
-  Generics.Collections;
+  System.Generics.Collections;
 
+
+const
+  ByNameKey = '{965183D2-1A23-4BC5-850D-B8D2B7A137C4}';
 type
   TDIContainer = class;
-
+  TFactoryKind = (fkPure, fkByName);
   TDIRule = class(TObject)
   private
     class var FRTTIContext: TRTTIContext;
@@ -24,76 +27,91 @@ type
     FServiceType: PTypeInfo;
     FFordwardToType: PTypeInfo;
     FName: string;
-    FBuildStrategy: TFunc<TObject>;
     FIsSingleton: Boolean;
     FSingleton: TObject;
     FArgs: TArray<TValue>;
-  private
+    FFactoryKind: TFactoryKind;
+    FBuildStrategy: TFunc<TObject>;
+    FByNameStrategy: TFunc<string, TObject>;
+    FUpdateCount: Integer;
+    procedure SetBuildStrategy(const Value: TFunc<TObject>);
+    procedure SetByNameStrategy(const Value: TFunc<string, TObject>);
+    procedure SetName(const Value: string);
+    procedure SetImplementorType(const Value: PTypeInfo);
+    procedure SetServiceType(const Value: PTypeInfo);
+  protected
     constructor Create(Container: TDIContainer; ImplementorType: PTypeInfo);
-    function Build: TObject;
+    function GetImplmentor(Name: string): TObject;
+    procedure BeginUpdate;
+    procedure EndUpdate;
     function DefaultCtorStrategy: TObject;
-    function FordwardStrategy: TObject;
-    property Name: string read FName;
-    property ImplementorType: PTypeInfo read FImplementorType;
-    property ServiceType: PTypeInfo read FServiceType;
+    function FordwardStrategy(Name: string): TObject;
+    property Name: string read FName write SetName;
+    property ImplementorType: PTypeInfo read FImplementorType write SetImplementorType;
+    property ServiceType: PTypeInfo read FServiceType write SetServiceType;
     property IsSingleton: Boolean read FIsSingleton write FIsSingleton;
   public
     destructor Destroy; override;
     function FordwardTo(const AType: PTypeInfo): TDIRule;
     function ForServiceType(const AType: PTypeInfo; const Name: string = ''): TDIRule;
-    function Factory(Builder: TFunc<TObject>): TDIRule;
+    function Factory(Builder: TFunc<TObject>): TDIRule;overload;
+    function Factory(Builder: TFunc<string, TObject>): TDIRule;overload;
     property Args: TArray<TValue> read FArgs write FArgs;
+    property BuildStrategy: TFunc<TObject> read FBuildStrategy write SetBuildStrategy;
+    property ByNameStrategy: TFunc<string, TObject> read FByNameStrategy write SetByNameStrategy;
   end;
 
-  TDIRuleList = class(TStringList)
+  TServiceRules = class
   private
     FServiceType: PTypeInfo;
-    function GetRule(const Name: string): TDIRule;
+    FRules: TObjectDictionary<string, TDIRule>;
+    function ContainsRule(Rule: TDIRule): Boolean;
   public
     constructor Create(ServiceType: PTypeInfo);
     destructor Destroy; override;
-    function FindRule(const Name: string): TDIRule;
-    function ContainsRule(Rule: TDIRule): Boolean;
-    procedure RemoveRule(Rule: TDIRule);
-    procedure AddRule(Rule: TDIRule);
+    function GetRule(const Name: string): TDIRule;
+    function FindRule(const Name: string): TDIRule;overload;
+    function TryGetRule(const Name: string; out Rule: TDIRule): Boolean;overload;
+    procedure Remove(Rule: TDIRule);
+    procedure Add(Rule: TDIRule);
     property ServiceType: PTypeInfo read FServiceType;
-    property Rules[const Name: string]: TDIRule read GetRule; default;
   end;
 
   TDIRule<T: class> = class(TDIRule)
   private
-    constructor Create(Container: TDIContainer);
   public
-    // Fluent api
+    constructor Create(Container: TDIContainer);
     function ForService<TService>(const Name: string = ''): TDIRule<T>;
-   // function FordwardTo<TService>: TDIRule<T>;
-    function Factory(Builder: TFunc<T>): TDIRule<T>;
+    function FordwardTo<TService>: TDIRule<T>;
+    function Factory(Builder: TFunc<T>): TDIRule<T>;overload;
+    function Factory(Builder: TFunc<string, T>): TDIRule<T>;overload;
     function AsSingleton: TDIRule<T>;
     function Construct(Arg: TValue): TDIRule<T>;overload;
     function Construct(Args: TArray<TValue>): TDIRule<T>;overload;
   end;
 
-  TDIRules = TObjectDictionary<PTypeInfo, TDIRuleList>;
+  TDIRules = TObjectDictionary<PTypeInfo, TServiceRules>;
   TDIContainer = class
   private
     class var FDIContainer: TDIContainer;
-    function GetService(out Intf; Info: PTypeInfo; Name: string=''): Boolean;overload;
-    function GetService(Info: PTypeInfo; Name: string=''): TValue;overload;
   strict private
-    FDIRules: TDIRules;
-    function GetRules(ServiceType: PTypeInfo): TDIRuleList;
+    FRules: TDIRules;
   protected
-    function FindRule(ServiceType: PTypeInfo; Name: string = ''): TDIRule;
+    function GetService(out Intf; ServiceType: PTypeInfo; Name: string=''): Boolean;overload;
+    function GetServiceRulesOrDefault(ServiceType: PTypeInfo): TServiceRules;
+    function GetServiceRule(ServiceType: PTypeInfo; Name: string): TDIRule;
     function ContainsRule(Rule: TDIRule): Boolean;
     procedure AddRule(Rule: TDIRule);
     procedure RemoveRule(Rule: TDIRule);
     procedure BeforeUpdate(Rule: TDIRule);
     procedure AfterUpdate(Rule: TDIRule);
-    property Rules[ServiceType: PTypeInfo]: TDIRuleList read GetRules; default;
   public
     constructor Create;
     destructor Destroy; override;
+    procedure Clear;
+    class function NoRuleFoundError(ServiceType: PTypeInfo; Name: string): Exception;
     function Returns<T: class>: TDIRule<T>;
+    function GetService(Info: PTypeInfo; Name: string=''): TValue;overload;
     function GetService<TService: IInterface>(Name: string = ''): TService;overload;
   end;
 
@@ -132,7 +150,6 @@ function SICOSolveArgs(Method: TRttiMethod; const Args: TArray<TValue>): TArray<
 var
   Params: TArray<TRttiParameter>;
   idx: Integer;
-  Implementor: TObject;
   Service: TValue;
   Intf: IInterface;
 begin
@@ -142,9 +159,10 @@ begin
     Exit;
   for idx := 0 to high(Args) do begin
     if (Params[idx].ParamType is TRttiInterfaceType) and (Args[idx].TypeInfo = TypeInfo(string)) then begin
-      Implementor := SICO.GetService(Params[idx].ParamType.Handle, Args[idx].ToString).AsObject;
-      Supports(Implementor, TRttiInterfaceType(Params[idx].ParamType).GUID, Intf);
-      TValue.Make(@Intf, Params[idx].ParamType.Handle, Service);
+      if SICO.GetService(Intf, Params[idx].ParamType.Handle, Args[idx].ToString) then
+        TValue.Make(@Intf, Params[idx].ParamType.Handle, Service)
+       else
+        Service := nil;
       Result := Result + [Service];
     end
     else
@@ -159,7 +177,7 @@ end;
 
 { TDIRule }
 
-function TDIRule.Build: TObject;
+function TDIRule.GetImplmentor(Name: string): TObject;
 var
   Intf: IInterface;
 begin
@@ -167,7 +185,11 @@ begin
     Result := FSingleton
   else
   begin
-    Result := FBuildStrategy();
+    case FFactoryKind of
+      fkByName: Result := ByNameStrategy(Name)
+      else Result := BuildStrategy();
+    end;
+
     if IsSingleton then
     begin
       FSingleton := Result;
@@ -182,7 +204,7 @@ begin
   inherited Create;
   FContainer := Container;
   FImplementorType := ImplementorType;
-  FBuildStrategy := DefaultCtorStrategy;
+  BuildStrategy := DefaultCtorStrategy;
 end;
 
 function TDIRule.DefaultCtorStrategy: TObject;
@@ -208,6 +230,7 @@ var
 begin
   // workaround for compiler bug: FBuilder is not released !
   TFunc<TObject>(FBuildStrategy) := nil;
+  TFunc<TObject>(FByNameStrategy) := nil;
   if IsSingleton then
   begin
     if Supports(FSingleton, IInterface, Intf) then
@@ -218,37 +241,88 @@ begin
   inherited;
 end;
 
-function TDIRule.FordwardStrategy: TObject;
+function TDIRule.FordwardStrategy(Name: string): TObject;
 begin
-  Result := FContainer.FindRule(FFordwardToType, Name).Build;
+  Result := FContainer.GetServiceRule(FFordwardToType, Name).GetImplmentor(Name);
 end;
 
 function TDIRule.FordwardTo(const AType: PTypeInfo): TDIRule;
 begin
   Result := Self;
   Result.FFordwardToType := AType;
-  Result.FBuildStrategy := FordwardStrategy;
+  Result.ByNameStrategy := FordwardStrategy;
 end;
 
-function TDIRule.ForServiceType(const AType: PTypeInfo;
-  const Name: string): TDIRule;
+function TDIRule.ForServiceType(const AType: PTypeInfo; const Name: string): TDIRule;
 begin
-  FContainer.BeforeUpdate(Self);
   Result := Self;
-  Result.FServiceType := AType;
-  Result.FName := Name;
-  FContainer.AfterUpdate(Self);
+  BeginUpdate;
+  Result.ServiceType := AType;
+  Result.Name := Name;
+  EndUpdate;
+end;
+
+function TDIRule.Factory(Builder: TFunc<string, TObject>): TDIRule;
+begin
+  Result := Self;
+  ByNameStrategy := Builder;
 end;
 
 function TDIRule.Factory(Builder: TFunc<TObject>): TDIRule;
 begin
   Result := Self;
-  FBuildStrategy := Builder;
+  BuildStrategy := Builder;
 end;
 
 class function TDIRule.GetRTTI(Info: PTypeInfo): TRTTIType;
 begin
   Result := FRTTIContext.GetType(Info);
+end;
+
+procedure TDIRule.BeginUpdate;
+begin
+  Inc(FUpdateCount);
+  if FUpdateCount = 1 then
+    FContainer.BeforeUpdate(Self);
+end;
+
+procedure TDIRule.EndUpdate;
+begin
+  Dec(FUpdateCount);
+  if FUpdateCount = 0 then
+  FContainer.AfterUpdate(Self);
+end;
+
+procedure TDIRule.SetName(const Value: string);
+begin
+  BeginUpdate;
+  FName := Value;
+  EndUpdate;
+end;
+
+procedure TDIRule.SetServiceType(const Value: PTypeInfo);
+begin
+  BeginUpdate;
+  FServiceType := Value;
+  EndUpdate;
+end;
+
+procedure TDIRule.SetImplementorType(const Value: PTypeInfo);
+begin
+  FImplementorType := Value;
+end;
+
+procedure TDIRule.SetByNameStrategy(const Value: TFunc<string, TObject>);
+begin
+  Name := ByNameKey;
+  FByNameStrategy := Value;
+  FFactoryKind := fkByName;
+end;
+
+procedure TDIRule.SetBuildStrategy(const Value: TFunc<TObject>);
+begin
+  FBuildStrategy := Value;
+  FFactoryKind := fkPure;
 end;
 
 { TDIRule<T> }
@@ -278,13 +352,11 @@ begin
   inherited Create(Container, TypeInfo(T));
 end;
 
-(*
 function TDIRule<T>.FordwardTo<TService>: TDIRule<T>;
 begin
   Result := Self;
   inherited FordwardTo(TypeInfo(TService));
 end;
-*)
 
 function TDIRule<T>.ForService<TService>(const Name: string = ''): TDIRule<T>;
 begin
@@ -297,17 +369,28 @@ begin
   inherited Factory(TFunc<TObject>(Builder));
 end;
 
+function TDIRule<T>.Factory(Builder: TFunc<string, T>): TDIRule<T>;
+begin
+  Result := Self;
+  inherited Factory(TFunc<string, TObject>(Builder));
+end;
+
 { TDIContainer }
 
 constructor TDIContainer.Create;
 begin
   inherited Create;
-  FDIRules := TDIRules.Create([doOwnsValues]);
+  FRules := TDIRules.Create([doOwnsValues]);
+end;
+
+procedure TDIContainer.Clear;
+begin
+  FRules.Clear;
 end;
 
 destructor TDIContainer.Destroy;
 begin
-  FDIRules.Free;
+  FRules.Free;
   inherited;
 end;
 
@@ -322,18 +405,32 @@ begin
   end;
 end;
 
-function TDIContainer.GetService(out Intf; Info: PTypeInfo; Name: string): Boolean;
+class function TDIContainer.NoRuleFoundError(ServiceType: PTypeInfo; Name: string): Exception;
+begin
+  Result := Exception.CreateFmt('SICO error: No injection Rule %s for service <%s>', [Name, ServiceType.Name]);
+end;
+
+function TDIContainer.GetServiceRule(ServiceType: PTypeInfo; Name: string): TDIRule;
+var
+  ServiceRules: TServiceRules;
+begin
+  ServiceRules:= GetServiceRulesOrDefault(ServiceType);
+  if not (ServiceRules.TryGetRule(Name, Result) or ServiceRules.TryGetRule(ByNameKey, Result)) then
+    raise TDIContainer.NoRuleFoundError(ServiceType, Name);
+end;
+
+function TDIContainer.GetService(out Intf; ServiceType: PTypeInfo; Name: string): Boolean;
 var
   Rule: TDIRule;
   ServiceGuid: TGuid;
-  Instance: TObject;
+  Implementor: TObject;
 begin
   TMonitor.Enter(Self);
   try
-    Rule := FindRule(Info, Name);
-    Instance := Rule.Build;
-    ServiceGuid := GetTypeData(Info)^.Guid;
-    Result := Supports(Instance, ServiceGuid, Intf);
+    Rule := GetServiceRule(ServiceType, Name);
+    Implementor := Rule.GetImplmentor(Name);
+    ServiceGuid := GetTypeData(ServiceType)^.Guid;
+    Result := Supports(Implementor, ServiceGuid, Intf);
     if not Result then
       IInterface(Intf) := nil;
   finally
@@ -359,33 +456,27 @@ begin
   end;
 end;
 
-function TDIContainer.GetRules(ServiceType: PTypeInfo): TDIRuleList;
+function TDIContainer.GetServiceRulesOrDefault(ServiceType: PTypeInfo): TServiceRules;
 begin
-  if FDIRules.TryGetValue(ServiceType, Result) then
+  if FRules.TryGetValue(ServiceType, Result) then
     Exit;
-  Result := TDIRuleList.Create(ServiceType);
-  FDIRules.Add(ServiceType, Result);
-end;
-
-function TDIContainer.FindRule(ServiceType: PTypeInfo;
-  Name: string = ''): TDIRule;
-begin
-  Result := Self[ServiceType][Name];
+  Result := TServiceRules.Create(ServiceType);
+  FRules.Add(ServiceType, Result);
 end;
 
 procedure TDIContainer.AddRule(Rule: TDIRule);
 begin
-  Self[Rule.ServiceType].AddRule(Rule);
+  GetServiceRulesOrDefault(Rule.ServiceType).Add(Rule);
 end;
 
 function TDIContainer.ContainsRule(Rule: TDIRule): Boolean;
 begin
-  Result := Self[Rule.ServiceType].ContainsRule(Rule);
+  Result := GetServiceRulesOrDefault(Rule.ServiceType).ContainsRule(Rule);
 end;
 
 procedure TDIContainer.RemoveRule(Rule: TDIRule);
 begin
-  Self[Rule.ServiceType].RemoveRule(Rule);
+  GetServiceRulesOrDefault(Rule.ServiceType).Remove(Rule);
 end;
 
 procedure TDIContainer.BeforeUpdate(Rule: TDIRule);
@@ -401,57 +492,54 @@ end;
 
 { TDIRuleList }
 
-constructor TDIRuleList.Create(ServiceType: PTypeInfo);
+constructor TServiceRules.Create(ServiceType: PTypeInfo);
 begin
   inherited Create;
   FServiceType := ServiceType;
-  Duplicates := dupError;
-  Sorted := True;
+  FRules := TObjectDictionary<string, TDIRule>.Create(TTextComparer.Create);
 end;
 
-destructor TDIRuleList.Destroy;
-var
-  I: Integer;
+type
+  TCrackObjectDictionary = class(TDictionary<string, TObject>)
+  public
+    FOwnerships: TDictionaryOwnerships;
+  end;
+destructor TServiceRules.Destroy;
 begin
-  for I := 0 to Count - 1 do
-    Objects[I].DisposeOf;
+  TCrackObjectDictionary(FRules).FOwnerships := [doOwnsValues];
+  FRules.Free;
   inherited;
 end;
 
-procedure TDIRuleList.AddRule(Rule: TDIRule);
+procedure TServiceRules.Add(Rule: TDIRule);
 begin
-  AddObject(Rule.Name, Rule)
+  FRules.AddOrSetValue(Rule.Name, Rule);
 end;
 
-procedure TDIRuleList.RemoveRule(Rule: TDIRule);
-var
-  Pos: Integer;
+procedure TServiceRules.Remove(Rule: TDIRule);
 begin
-  if not Find(Rule.Name, Pos) then
-    Exit;
-  Delete(Pos);
+  FRules.Remove(Rule.Name);
 end;
 
-function TDIRuleList.ContainsRule(Rule: TDIRule): Boolean;
+function TServiceRules.ContainsRule(Rule: TDIRule): Boolean;
 begin
-  Result := FindRule(Rule.Name) <> nil;
+  Result := FRules.ContainsKey(Rule.Name);
 end;
 
-function TDIRuleList.GetRule(const Name: string): TDIRule;
+function TServiceRules.GetRule(const Name: string): TDIRule;
 begin
-  Result := FindRule(name);
-  if not Assigned(Result) then
-    raise Exception.CreateFmt('Dependency Injection Rule for %s<%s> not found',
-      [Name, ServiceType.Name]);
+  if not TryGetRule(Name, Result) then
+    raise TDIContainer.NoRuleFoundError(ServiceType, Name);
 end;
 
-function TDIRuleList.FindRule(const Name: string): TDIRule;
-var
-  Pos: Integer;
+function TServiceRules.FindRule(const Name: string): TDIRule;
 begin
-  if not Find(Name, Pos) then
-    Exit(nil);
-  Result := Objects[Pos] as TDIRule;
+  TryGetRule(Name, Result);
+end;
+
+function TServiceRules.TryGetRule(const Name: string; out Rule: TDIRule): Boolean;
+begin
+  Result := FRules.TryGetValue(Name, Rule);
 end;
 
 initialization

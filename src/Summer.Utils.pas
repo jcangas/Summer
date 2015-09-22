@@ -10,7 +10,8 @@ unit Summer.Utils;
 interface
 
 uses
-  Generics.Collections,
+  System.Generics.Defaults,
+  System.Generics.Collections,
   System.TypInfo,
   System.SysUtils,
   System.Classes,
@@ -65,11 +66,13 @@ type
     class function JSONToArray(const AArray: TJSONArray): TValue; static;
   public
     class function FromJSON(Value: TJSONValue): TValue; static;
+    function Convert(ATypeInfo: PTypeInfo; out Converted: TValue): Boolean;
     function AsArray: TArray<TValue>;
     function AsJSON: TJSONValue;
+    function IsEnum: Boolean;
     function IsNumber: Boolean;
-    function IsIntegerNumber: Boolean;
-    function IsFloatNumber: Boolean;
+    function IsInteger: Boolean;
+    function IsFloat: Boolean;
     function IsString: Boolean;
     function IsBoolean: Boolean;
     function IsChar: Boolean;
@@ -145,6 +148,7 @@ type
 
   TSlice = record
   public type
+    PItem = ^TItem;
     TItem = record
     private
       FIndex: Integer;
@@ -155,11 +159,11 @@ type
       function GetIsProperty: Boolean;
       function GetAsVariant: Variant;
       function GetAsJSONValue: TJSONValue;
-
+      procedure SetValue(const Value: TValue);
     public
       property index: Integer read FIndex;
       property Name: string read FName;
-      property Value: TValue read FValue write FValue;
+      property Value: TValue read FValue write SetValue;
       property AsVariant: Variant read GetAsVariant;
       property AsJSONValue: TJSONValue read GetAsJSONValue;
       property IsStored: Boolean read FIsStored;
@@ -168,11 +172,12 @@ type
     end;
 
     TEnumProc = reference to procedure(var Item: TItem; var StopEnum: Boolean);
-
+  private
+    class var RC: TRTTIContext;
   strict private
     FForClass: TClass;
     FItems: TArray<TItem>;
-    function GetItemOf(Name: string): TItem;
+    function GetItemOf(Name: string): PItem;
     procedure SetForClass(const Value: TClass);
 
   public
@@ -192,15 +197,23 @@ type
     procedure ForEach(Proc: TEnumProc);
     property ForClass: TClass read FForClass write SetForClass;
     property Items: TArray<TItem> read FItems;
-    property ItemOf[index: string]: TItem read GetItemOf; default;
+    property ItemOf[index: string]: PItem read GetItemOf; default;
   end;
 
   TValuesInjector = class
   private
   public
     class procedure InjectFields(Target: TObject; Source: TDataset);
+    class procedure InjectItems(Target: TObject; Source: TSlice);
     class procedure InjectProps(Target: TObject; Source: TObject);
   end;
+
+  TTextComparer = class(TInterfacedObject, IEqualityComparer<string>)
+  public
+    function Equals(const Left, Right: string): Boolean; reintroduce;
+    function GetHashCode(const Value: string): Integer; reintroduce;
+  end;
+
 
 implementation
 
@@ -593,6 +606,76 @@ begin
   end;
 end;
 
+function String2Integer(const Value: TValue; out Converted: TValue): Boolean;
+var
+  Aux: Integer;
+begin
+  Result := TryStrToInt(Value.ToString, Aux);
+  if Result then
+    Converted := Aux;
+end;
+
+function String2Float(const Value: TValue; out Converted: TValue): Boolean;
+var
+  Aux: Extended;
+begin
+  Result := TryStrToFloat(Value.ToString, Aux);
+  if Result then
+    Converted := Aux;
+end;
+
+function String2Enum(const Value: TValue; ATypeInfo: PTypeInfo; out Converted: TValue): Boolean;
+var
+  Aux: Integer;
+begin
+  Aux := System.TypInfo.GetEnumValue(ATypeInfo, Value.ToString);
+  Result := Aux >= 0;
+  if Result then
+    Converted := Aux
+end;
+
+function StringConvert(const Value: TValue; ATypeInfo: PTypeInfo;  out Converted: TValue): Boolean;
+begin
+  Converted := TValue.Empty.Cast(ATypeInfo);
+  if Converted.IsInteger then
+    Result := String2Integer(Value, Converted)
+  else if Converted.IsFloat then
+    Result := String2Float(Value, Converted)
+  else if Converted.IsEnum then
+    Result := String2Enum(Value, ATypeInfo, Converted)
+  else
+    Result := False;
+end;
+
+function Ordinal2Enum(const Value: TValue; ATypeInfo: PTypeInfo; out Converted: TValue): Boolean;
+var
+  Aux: Integer;
+begin
+  Aux := Value.AsOrdinal;
+  with GetTypeData(ATypeInfo)^ do
+    Result := (MinValue <= Aux) and (MaxValue >= Aux);
+  if Result then
+    TValue.Make(@Aux, ATypeInfo, Converted);
+end;
+
+function OrdinalConvert(const Value: TValue; ATypeInfo: PTypeInfo;  out Converted: TValue): Boolean;
+begin
+  Converted := TValue.Empty.Cast(ATypeInfo);
+  Result := Converted.IsEnum;
+  if Result then
+    Result := Ordinal2Enum(Value, ATypeInfo, Converted)
+end;
+
+function TValueHelper.Convert(ATypeInfo: PTypeInfo;  out Converted: TValue): Boolean;
+begin
+  Result := TryCast(ATypeInfo, Converted);
+  if Result then Exit;
+  if Self.IsString then
+     Result := StringConvert(Self, ATypeInfo, Converted)
+  else if Self.IsOrdinal then
+     Result := OrdinalConvert(Self, ATypeInfo, Converted);
+end;
+
 function TValueHelper.AsDef<T>(Def: T): T;
 var
   Aux: TValue;
@@ -603,9 +686,9 @@ begin
 
   if Self.IsString then
   begin
-    if Aux.IsIntegerNumber then
+    if Aux.IsInteger then
       Aux := StrToIntDef(Self.ToString, Aux.AsInteger)
-    else if Aux.IsFloatNumber then
+    else if Aux.IsFloat then
       Aux := StrToFloatDef(Self.ToString, Aux.AsExtended);
   end;
   Result := Aux.AsType<T>;
@@ -626,9 +709,9 @@ begin
     else
       Result := TJSONFalse.Create;
   end
-  else if IsIntegerNumber then
+  else if IsInteger then
     Result := TJSONNumber.Create(AsInt64)
-  else if IsFloatNumber then
+  else if IsFloat then
     Result := TJSONNumber.Create(AsExtended)
   else if IsObject then begin
     if (AsObject.IsObjectList) then begin
@@ -669,17 +752,22 @@ begin
   Result := (TypeInfo = System.TypeInfo(TDateTime));
 end;
 
+function TValueHelper.IsEnum: Boolean;
+begin
+  Result := Kind in [tkEnumeration];
+end;
+
 function TValueHelper.IsNumber: Boolean;
 begin
   Result := Kind in [tkInteger, tkFloat, tkInt64];
 end;
 
-function TValueHelper.IsIntegerNumber: Boolean;
+function TValueHelper.IsInteger: Boolean;
 begin
   Result := Kind in [tkInteger, tkInt64];
 end;
 
-function TValueHelper.IsFloatNumber: Boolean;
+function TValueHelper.IsFloat: Boolean;
 begin
   Result := Kind in [tkFloat];
 end;
@@ -827,6 +915,16 @@ begin
   Result := Assigned(FRtti);
 end;
 
+procedure TSlice.TItem.SetValue(const Value: TValue);
+var
+  Temp: TValue;
+begin
+  Temp := Value;
+  if Assigned(Rtti) then
+    Value.Convert(Rtti.PropertyType.Handle, Temp);
+  FValue := Temp;
+end;
+
 { TSlice }
 
 constructor TSlice.Create(const Instance: TObject);
@@ -856,7 +954,6 @@ end;
 
 procedure TSlice.Read(Instance: TObject);
 var
-  RC: TRttiContext;
   RInstance: TRttiInstanceType;
   RProp: TRttiInstanceProperty;
 begin
@@ -896,12 +993,12 @@ begin
   if not HasItems then begin
     RProperties := RInstance.GetProperties;
     for idx := 0 to Length(RProperties) - 1 do
-      if IsPublishedProp(ForClass, RProperties[idx].Name) then
+      if (RProperties[idx].Visibility in  [mvPublic, mvPublished]) then
         Inc(FoundCount);
     SetLength(FItems, FoundCount);
     FoundCount := 0;
     for idx := 0 to Length(RProperties) - 1 do begin
-      if not IsPublishedProp(ForClass, RProperties[idx].Name) then
+      if not (RProperties[idx].Visibility in  [mvPublic, mvPublished]) then
         Continue;
       FItems[FoundCount].FIndex := FoundCount;
       FItems[FoundCount].FIsStored := True;
@@ -916,7 +1013,6 @@ begin
     begin
       Item.FRtti := RInstance.GetProperty(Item.Name) as TRttiInstanceProperty;
     end);
-
 end;
 
 function TSlice.ToJSONObject: TJSONObject;
@@ -968,13 +1064,13 @@ begin
   end;
 end;
 
-function TSlice.GetItemOf(Name: string): TItem;
+function TSlice.GetItemOf(Name: string): PItem;
 var
   idx: Integer;
 begin
   idx := IndexOf(name);
   if idx = -1 then raise Exception.CreateFmt('%s not found', [name]);
-  Result := FItems[idx]
+  Result := @FItems[idx]
 end;
 
 function TSlice.GetNames: TArray<string>;
@@ -1001,27 +1097,15 @@ end;
 constructor TSlice.Create(const Value: TJSONObject);
 var
   idx: Integer;
-  JSONValue: TJSONValue;
 begin
   SetLength(FItems, Value.Count);
   for idx := 0 to Value.Count - 1 do begin
     FItems[idx].FName := Value.Pairs[idx].JsonString.Value;
-    JSONValue := Value.Pairs[idx].JSONValue;
-    if JSONValue is TJSONNull then
-      FItems[idx].FValue := TValue.Empty
-    else if JSONValue is TJSONTrue then
-      FItems[idx].FValue := True
-    else if JSONValue is TJSONFalse then
-      FItems[idx].FValue := False
-    else if JSONValue is TJSONString then
-      FItems[idx].FValue := JSONValue.Value
-    else if JSONValue is TJSONNumber then
-      if TJSONNumber(JSONValue).ToString.Contains(GetJSONFormat.DecimalSeparator) then
-          FItems[idx].FValue := TJSONNumber(JSONValue).AsDouble
+    FItems[idx].FValue := TValue.FromJSON(Value.Pairs[idx].JSONValue);
   end;
 end;
 
-{ TPropsInjector }
+{ TValuesInjector }
 
 class procedure TValuesInjector.InjectProps(Target: TObject; Source: TObject);
 var
@@ -1062,4 +1146,32 @@ begin
   end;
 end;
 
+class procedure TValuesInjector.InjectItems(Target: TObject; Source: TSlice);
+var
+  RC: TRttiContext;
+  RTTarget: TRttiInstanceType;
+  PropTarget: TRttiInstanceProperty;
+begin
+  RTTarget := RC.GetType(Target.ClassType) as TRttiInstanceType;
+  Source.ForEach(
+    procedure(var Item: TSlice.Titem; var StopEnum: Boolean)
+    begin
+      PropTarget := RTTarget.GetProperty(Item.Name) as TRttiInstanceProperty;
+      if Assigned(PropTarget) then
+        SetPropValue(Target, PropTarget.PropInfo, Item.Value.AsVariant);
+    end
+  );
+end;
+
+{ TTextComparer }
+
+function TTextComparer.Equals(const Left, Right: string): Boolean;
+begin
+  Result := CompareText(Left, Right) = 0;
+end;
+
+function TTextComparer.GetHashCode(const Value: string): Integer;
+begin
+  Result := Value.GetHashCode;
+end;
 end.
