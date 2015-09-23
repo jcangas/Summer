@@ -694,14 +694,39 @@ begin
   Result := Aux.AsType<T>;
 end;
 
+function EncodeJSONString(Value : String) : String;
+var
+  i: integer;
+begin
+  Result := Value;
+  i := 1;
+  while i < length(Result) do
+  begin
+    if Result[i] in ['"','\','/',#8,#9,#10,#12,#13] then
+    begin
+      case Result[i] of
+        #8:  Result[i] := 'b';
+        #9:  Result[i] := 't';
+        #10: Result[i] := 'r';
+        #12: Result[i] := 'f';
+        #13: Result[i] := 'n';
+      end;
+      insert('\',Result,i);
+      inc(i);
+    end;
+    inc(i);
+  end;
+end;
+
 function TValueHelper.AsJSON: TJSONValue;
 var
   ObjList: TObject;
 begin
   if IsEmpty then
     Result := TJSONNull.Create
-  else if IsString then
-    Result := TJSONString.Create(AsString)
+  else if IsString then begin
+    Result := TJSONString.Create(EncodeJSONString(AsString))
+  end
   else if IsBoolean then
   begin
     if AsBoolean then
