@@ -124,7 +124,7 @@ begin
 
   PathStr := RootPath(Copy(Method.Name, 1, Method.Name.Length - Length('Path')));
   TDirectory.CreateDirectory(PathStr);
-  Result := TPath.Combine(PathStr, Args[1].ToString);
+  Result := ToPlatformPath(TPath.Combine(PathStr, Args[1].ToString));
 end;
 
 function TStandardPaths.FullExeName(const NewExtension: string = '*'): string;

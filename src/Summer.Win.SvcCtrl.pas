@@ -53,7 +53,7 @@ end;
 procedure TWinServiceControl.Exec(const Args: string);
 begin
 {$IFDEF MSWINDOWS}
-  TOSShell.RunAs('sc', Args, Hide);
+  TOSShell.RunAs('sc', Args, TOSShell.ShowMode.Hide);
 {$ENDIF MSWINDOWS}
 end;
 

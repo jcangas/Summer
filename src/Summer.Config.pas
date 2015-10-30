@@ -1,10 +1,11 @@
 unit Summer.Config;
 
 interface
-uses System.JSON,
+
+uses
+  System.JSON,
   System.SysUtils,
   System.IOUtils,
-  System.Classes,
   System.Rtti,
   Summer.IConfig;
 
@@ -54,8 +55,9 @@ type
   TConfiguration = class(TJSONProperties, IConfiguration);
 
 implementation
+
 uses
-  Summer.Utils;
+  Summer.RTTI;
 
 constructor TJSONProperties.Create(Values: TJSONObject; const OwnValues: Boolean);
 begin
