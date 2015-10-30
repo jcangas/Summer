@@ -393,7 +393,7 @@ end;
 
 {$ELSE}
 
-class function TOSShell.RunAs(Command: string; Parameters: string = ''; const Mode: TShowMode = Normal): Cardinal;
+class function TOSShell.RunAs(Command: string; Parameters: string; const Mode: ShowMode): Cardinal;
 begin
   Result := 0;
 end;
