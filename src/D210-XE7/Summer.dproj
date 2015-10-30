@@ -265,6 +265,16 @@
         <DCCReference Include="..\Summer.StdPaths.pas"/>
         <DCCReference Include="..\Summer.Utils.pas"/>
         <DCCReference Include="..\Summer.Win.SvcCtrl.pas"/>
+        <DCCReference Include="..\Summer.JSON.pas"/>
+        <DCCReference Include="..\Summer.RTTI.pas"/>
+        <DCCReference Include="..\Summer.IEncryption.pas"/>
+        <DCCReference Include="..\Summer.DateTime.pas"/>
+        <DCCReference Include="..\Summer.Enum.pas"/>
+        <DCCReference Include="..\Summer.Strings.pas"/>
+        <DCCReference Include="..\Summer.DataSet.pas"/>
+        <DCCReference Include="..\Summer.Nullable.pas"/>
+        <DCCReference Include="..\Summer.Queryable.pas"/>
+        <DCCReference Include="..\Summer.Encryption.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

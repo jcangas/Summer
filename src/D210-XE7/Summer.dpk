@@ -44,6 +44,16 @@ contains
   Summer.SICO in '..\Summer.SICO.pas',
   Summer.StdPaths in '..\Summer.StdPaths.pas',
   Summer.Utils in '..\Summer.Utils.pas',
-  Summer.Win.SvcCtrl in '..\Summer.Win.SvcCtrl.pas';
+  Summer.Win.SvcCtrl in '..\Summer.Win.SvcCtrl.pas',
+  Summer.JSON in '..\Summer.JSON.pas',
+  Summer.RTTI in '..\Summer.RTTI.pas',
+  Summer.IEncryption in '..\Summer.IEncryption.pas',
+  Summer.DateTime in '..\Summer.DateTime.pas',
+  Summer.Enum in '..\Summer.Enum.pas',
+  Summer.Strings in '..\Summer.Strings.pas',
+  Summer.DataSet in '..\Summer.DataSet.pas',
+  Summer.Nullable in '..\Summer.Nullable.pas',
+  Summer.Queryable in '..\Summer.Queryable.pas',
+  Summer.Encryption in '..\Summer.Encryption.pas';
 
 end.
