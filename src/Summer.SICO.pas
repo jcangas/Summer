@@ -5,15 +5,14 @@ unit Summer.SICO;
 interface
 
 uses
-  System.Classes,
   System.TypInfo,
   System.RTTI,
   System.SysUtils,
   System.Generics.Collections;
 
-
 const
   ByNameKey = '{965183D2-1A23-4BC5-850D-B8D2B7A137C4}';
+
 type
   TDIContainer = class;
   TFactoryKind = (fkPure, fkByName);
@@ -53,9 +52,11 @@ type
   public
     destructor Destroy; override;
     function FordwardTo(const AType: PTypeInfo): TDIRule;
-    function ForServiceType(const AType: PTypeInfo; const Name: string = ''): TDIRule;
+    function ForService(const AType: PTypeInfo; const Name: string = ''): TDIRule;
     function Factory(Builder: TFunc<TObject>): TDIRule;overload;
     function Factory(Builder: TFunc<string, TObject>): TDIRule;overload;
+    function Construct(Arg: TValue): TDIRule;overload;
+    function Construct(Args: TArray<TValue>): TDIRule;overload;
     property Args: TArray<TValue> read FArgs write FArgs;
     property BuildStrategy: TFunc<TObject> read FBuildStrategy write SetBuildStrategy;
     property ByNameStrategy: TFunc<string, TObject> read FByNameStrategy write SetByNameStrategy;
@@ -81,7 +82,7 @@ type
   private
   public
     constructor Create(Container: TDIContainer);
-    function ForService<TService>(const Name: string = ''): TDIRule<T>;
+    function ForService<TService>(const Name: string = ''): TDIRule<T>;overload;
     function FordwardTo<TService>: TDIRule<T>;
     function Factory(Builder: TFunc<T>): TDIRule<T>;overload;
     function Factory(Builder: TFunc<string, T>): TDIRule<T>;overload;
@@ -110,7 +111,8 @@ type
     destructor Destroy; override;
     procedure Clear;
     class function NoRuleFoundError(ServiceType: PTypeInfo; Name: string): Exception;
-    function Returns<T: class>: TDIRule<T>;
+    function Returns(Info: PTypeInfo): TDIRule;overload;
+    function Returns<T: class>: TDIRule<T>;overload;
     function GetService(Info: PTypeInfo; Name: string=''): TValue;overload;
     function GetService<TService: IInterface>(Name: string = ''): TService;overload;
   end;
@@ -118,7 +120,10 @@ type
 function SICO: TDIContainer; inline;
 
 implementation
-uses Summer.Utils;
+
+uses
+  Summer.Utils,
+  Summer.RTTI;
 
 function ArgMatch(Arg: TValue; Param: TRttiParameter): Boolean;
 begin
@@ -126,7 +131,7 @@ begin
             or ((Arg.TypeInfo = TypeInfo(string)) and (Param.ParamType is TRttiInterfaceType));
 end;
 
-function SICOArgsMatch(const SomeArgs: TArray<TValue>; Quality: TVoteQuality = vqRequires): TVoteFunc;
+function SICOArgsMatch(const SomeArgs: TArray<TValue>; Quality: TVoteQuality = TVoteQuality.vqRequires): TVoteFunc;
 var
   CopyArgs: TArray<TValue>;
 begin
@@ -199,6 +204,20 @@ begin
   end;
 end;
 
+function TDIRule.Construct(Args: TArray<TValue>): TDIRule;
+begin
+  Result := Self;
+  Result.Args := Args;
+end;
+
+function TDIRule.Construct(Arg: TValue): TDIRule;
+var
+  Args: TArray<TVAlue>;
+begin
+  Args := [Arg];
+  Result := Construct(Args);
+end;
+
 constructor TDIRule.Create(Container: TDIContainer; ImplementorType: PTypeInfo);
 begin
   inherited Create;
@@ -214,9 +233,9 @@ var
   CallArgs: TArray<TValue>;
 begin
   AClass := (GetRTTI(ImplementorType) as TRttiInstanceType).MetaclassType;
-  Method := AClass.MethodBy([TMethod.KindIs(mkConstructor),
+  Method := AClass.MethodBy([TMethod.KindIs([mkConstructor]),
     SICOArgsMatch(Args),
-    TMethod.NameIs('Create', vqPrefers)]
+    TMethod.NameIs('Create', TVoteQuality.vqPrefers)]
   );
   if Method = nil then Exit(nil); // raise??
 
@@ -253,7 +272,7 @@ begin
   Result.ByNameStrategy := FordwardStrategy;
 end;
 
-function TDIRule.ForServiceType(const AType: PTypeInfo; const Name: string): TDIRule;
+function TDIRule.ForService(const AType: PTypeInfo; const Name: string): TDIRule;
 begin
   Result := Self;
   BeginUpdate;
@@ -360,7 +379,7 @@ end;
 
 function TDIRule<T>.ForService<TService>(const Name: string = ''): TDIRule<T>;
 begin
-  Result := ForServiceType(TypeInfo(TService), Name) as TDIRule<T>;
+  Result := ForService(TypeInfo(TService), Name) as TDIRule<T>;
 end;
 
 function TDIRule<T>.Factory(Builder: TFunc<T>): TDIRule<T>;
@@ -394,12 +413,23 @@ begin
   inherited;
 end;
 
+function TDIContainer.Returns(Info: PTypeInfo): TDIRule;
+begin
+  TMonitor.Enter(Self);
+  try
+    Result := TDIRule.Create(Self, Info);
+    Result.ForService(Info);
+  finally
+    TMonitor.Exit(Self);
+  end;
+end;
+
 function TDIContainer.Returns<T>: TDIRule<T>;
 begin
   TMonitor.Enter(Self);
   try
     Result := TDIRule<T>.Create(Self);
-    Result.ForServiceType(TypeInfo(T));
+    Result.ForService(TypeInfo(T));
   finally
     TMonitor.Exit(Self);
   end;
