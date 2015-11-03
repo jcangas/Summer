@@ -3,7 +3,7 @@
         <ProjectGuid>{33E2713C-1E33-437C-AA2B-C88593200ACC}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="..\src\D210-XE7\Summer.dproj">
+        <Projects Include="Summer.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -15,13 +15,13 @@
         </BorlandProject>
     </ProjectExtensions>
     <Target Name="Summer">
-        <MSBuild Projects="..\src\D210-XE7\Summer.dproj"/>
+        <MSBuild Projects="Summer.dproj"/>
     </Target>
     <Target Name="Summer:Clean">
-        <MSBuild Projects="..\src\D210-XE7\Summer.dproj" Targets="Clean"/>
+        <MSBuild Projects="Summer.dproj" Targets="Clean"/>
     </Target>
     <Target Name="Summer:Make">
-        <MSBuild Projects="..\src\D210-XE7\Summer.dproj" Targets="Make"/>
+        <MSBuild Projects="Summer.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
         <CallTarget Targets="Summer"/>
@@ -34,7 +34,7 @@
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
-        <BuildGroupProject Include="..\src\D210-XE7\Summer.dproj">
+        <BuildGroupProject Include="Summer.dproj">
             <ProjectGuid>{C153B219-4473-4085-B8E7-9E03D606FE86}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Android;Win32;Win64</Platforms>

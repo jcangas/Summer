@@ -130,7 +130,6 @@
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <GenDll>true</GenDll>
         <SanitizedProjectName>Summer</SanitizedProjectName>
-        <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DllSuffix>D210</DllSuffix>
         <VerInfo_Locale>3082</VerInfo_Locale>
         <GenPackage>true</GenPackage>
@@ -244,10 +243,6 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
     </PropertyGroup>
-    <Import Project="..\..\src\source.optset" Condition="'$(Base)'!='' And Exists('..\..\src\source.optset')"/>
-    <Import Project="..\..\..\source.optset" Condition="'$(Base)'!='' And Exists('..\..\..\source.optset')"/>
-    <Import Project="..\..\source.optset" Condition="'$(Base)'!='' And Exists('..\..\source.optset')"/>
-    <Import Project="..\..\src.optset" Condition="'$(Base)'!='' And Exists('..\..\src.optset')"/>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
