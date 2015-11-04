@@ -23,7 +23,7 @@ type
     procedure SetDefaults(Value: IConfiguration);
 
   public
-    function Clone : IConfiguration;
+    function Clone : IConfiguration; overload;
     property Defaults: IConfiguration read GetDefaults write SetDefaults;
   end;
 
@@ -39,7 +39,7 @@ end;
 
 function TConfiguration.Clone: IConfiguration;
 begin
-  Result := TConfiguration.Create(inherited Clone as  TJSONObject, True);
+  Result := TConfiguration.Create(AsObject.Clone as TJSONObject, True);
 end;
 
 function TConfiguration.GetChild(const Name: string): IJSONProperties;
