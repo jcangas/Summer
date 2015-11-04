@@ -7,7 +7,8 @@ uses
   System.SysUtils,
   System.IOUtils,
   System.Rtti,
-  Summer.IJSONProperties;
+  Summer.IJSONProperties,
+  System.Classes;
 
 type
   TJSONProperties = class(TInterfacedObject, IJSONProperties)
@@ -28,6 +29,8 @@ type
     destructor Destroy;override;
     procedure LoadFromFile(const AFileName:string='');
     procedure SaveToFile(const AFileName:string='');
+    procedure LoadFromStream(const AStream : TStream);
+    procedure SaveToStream(const AStream : TStream);
     function GetEnumerator: TJSONPairEnumerator;
     function AddPair(const Str: string; const Val: TJSONValue): TJSONObject;
     function RemovePair(const PairName: string): TJSONPair;
@@ -172,12 +175,33 @@ begin
   AsJSON := TFile.ReadAllText(FileName, TEncoding.UTF8);
 end;
 
+procedure TJSONProperties.LoadFromStream(const AStream: TStream);
+var
+  strStream : TStringStream;
+begin
+  strStream := TStringStream.Create;
+  try
+    strStream.LoadFromStream(AStream);
+    AsJSON := strStream.DataString;
+  finally
+    strStream.Free;
+  end;
+end;
+
 procedure TJSONProperties.SaveToFile(const AFileName:string='');
 begin
   if not AFileName.IsEmpty then
     FFileName := AFileName;
 
   TFile.WriteAllText(FileName, GetAsJSON, TEncoding.UTF8);
+end;
+
+procedure TJSONProperties.SaveToStream(const AStream: TStream);
+var
+  buffer : TArray<Byte>;
+begin
+  buffer := TEncoding.UTF8.GetBytes(GetAsJSON);
+  AStream.Write(buffer, Length(Buffer));
 end;
 
 function TJSONProperties.GetAsJSON: string;

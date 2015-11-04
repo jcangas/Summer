@@ -4,7 +4,8 @@ interface
 
 uses
   System.JSON
-  , System.Rtti;
+  , System.Rtti
+  , System.Classes;
 
 type
   IJSONProperties = interface
@@ -17,6 +18,8 @@ type
     function GetFileName: string;
     procedure LoadFromFile(const AFileName:string='');
     procedure SaveToFile(const AFileName:string='');
+    procedure LoadFromStream(const AStream : TStream);
+    procedure SaveToStream(const AStream : TStream);
     function GetEnumerator: TJSONPairEnumerator;
     function AddPair(const Str: string; const Val: TJSONValue): TJSONObject;
     function RemovePair(const PairName: string): TJSONPair;
