@@ -13,6 +13,7 @@ uses
   System.Rtti,
   System.JSON,
   System.SysUtils,
+  System.Character,
   Data.DB;
 
 {$SCOPEDENUMS ON}
@@ -451,7 +452,7 @@ begin
   Result := P;
   V := 0;
 
-  while CharInSet(Result^, ['0' .. '9']) and (MaxLen > 0) do // (Result^ in ['0'..'9'])
+  while Result^.IsDigit and (MaxLen > 0) do
   begin
     V := V * 10 + (Ord(Result^) - Ord('0'));
     Inc(Result);
