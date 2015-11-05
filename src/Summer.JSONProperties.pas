@@ -141,13 +141,16 @@ function DeepChild(Obj: TJSONObject; var Path: TArray<string>): TJSONObject;
 var
   Child: TJSONObject;
   Len: Integer;
+  oldPair : TJSONPair;
 begin
   Child := nil;
   Len := Length(Path);
   if Len > 1 then begin
     if not Obj.TryGetValue<TJSONObject>(Path[0], Child) then begin
       Child := TJSONObject.Create;
-      Obj.RemovePair(Path[0]);
+      oldPair := Obj.RemovePair(Path[0]);
+      if (oldPair<>nil) and oldPair.GetOwned then
+        oldPair.Free;
       Obj.AddPair(Path[0], Child);
     end;
     Path := Copy(Path, 1, Len);
@@ -160,10 +163,14 @@ procedure TJSONProperties.SetValue(const Name: string; const Value: TValue);
 var
   KeyPath: TArray<string>;
   Target: TJSONObject;
+  oldPair : TJSONPair;
 begin
   KeyPath := Name.Split(['.']);
   Target := DeepChild(FJSONObject, KeyPath);
-  Target.RemovePair(KeyPath[0]);
+  oldPair := Target.RemovePair(KeyPath[0]);
+  if FOwnValues and (oldPair <> nil) and oldPair.GetOwned then
+    oldPair.Free;
+
   Target.AddPair(KeyPath[0], Value.AsJSON);
 end;
 
