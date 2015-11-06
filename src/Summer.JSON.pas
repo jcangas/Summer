@@ -86,6 +86,10 @@ type
 
     { DataSet to JSON }
     class function DataSetToJSON(DataSet: TDataSet): TJSONObject;
+
+    { JSON Pretty Print }
+    class function PrettyPrint(const value : TJSONValue; const IdentString : string = '  ') : string;
+
   end;
 
 implementation
@@ -95,10 +99,11 @@ uses
   System.DateUtils,
   Summer.Nullable,
   Summer.Rtti,
-  Summer.Config,
+  Summer.JSONProperties,
   Summer.DateTime,
   Summer.Enum,
-  Summer.Utils;
+  Summer.Utils,
+  System.StrUtils;
 
 resourcestring
   StrUnSuportedType = 'Tipo no soportado: %s';
@@ -842,5 +847,63 @@ class function TJSON.DataSetToJSON(DataSet: TDataSet): TJSONObject;
 begin
   Result := TDataSetJSON.ToJSON(DataSet);
 end;
+
+class function TJSON.PrettyPrint(const value : TJSONValue; const IdentString : string = '  ') : string;
+
+  procedure PrettyPrintValue(const aValue : TJSONValue; const level : Integer;
+    const sbResult : TStringBuilder; const identation : String);
+  var
+    pair : TJSONPair;
+    item : TJSONValue;
+    isFirst : Boolean;
+  begin
+    if aValue is TJSONObject then begin
+      sbResult.Append('{').AppendLine;
+      isFirst := true;
+      if TJSONObject(aValue).Count = 0 then
+        sbResult.Append('}')
+      else begin
+        for pair in TJSONObject(aValue) do begin
+          if isFirst then isFirst := False
+          else sbResult.Append(',').AppendLine;
+          sbResult.Append(DupeString(identation, level+1))
+            .Append(pair.JsonString)
+            .Append(': ');
+          PrettyPrintValue(pair.JsonValue, level + 1, sbResult, identation);
+        end;
+        sbResult.AppendLine.Append(DupeString(identation, level))
+          .Append('}');
+      end;
+    end
+    else if aValue is TJSONArray then begin
+      sbResult.Append('[').AppendLine;
+      isFirst := true;
+      if TJSONArray(aValue).Count = 0 then
+        sbResult.Append(']')
+      else begin
+        for item in TJSONArray(aValue) do begin
+          if isFirst then isFirst := False
+          else sbResult.Append(',').AppendLine;
+
+          sbResult.Append(DupeString(identation, level+1));
+          PrettyPrintValue(item, level + 1, sbResult, identation);
+        end;
+        sbResult.AppendLine.Append(DupeString(identation, level))
+          .Append(']');
+      end;
+    end
+    else if (aValue is TJSONString) or (aValue is TJSONTrue) or (aValue is TJSONFalse)
+    or (aValue is TJSONNull) or (aValue is TJSONNumber) then
+      sbResult.Append(aValue.ToString);
+  end;
+var
+  sb : TStringBuilder;
+begin
+  sb := TStringBuilder.Create;
+  PrettyPrintValue(value, 0, sb, IdentString);
+  result := sb.ToString;
+  sb.Free;
+end;
+
 
 end.
