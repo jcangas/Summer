@@ -21,7 +21,7 @@ type
     function GetPair(const Index: Integer): TJSONPair;
     function GetValue(const Name: string): TValue; virtual;
     function GetChild(const Name: string): IJSONProperties; virtual;
-    procedure SetValue(const Name: string; const Value: TValue);
+    procedure SetValue(const Name: string; const Value: TValue); virtual;
     function GetFileName: string;
     constructor Create(Values: TJSONObject; const OwnValues: Boolean);overload;
   public
