@@ -1,0 +1,22 @@
+= Summer
+ Give some superpowers to your Delphi code
+
+== Summer? WTF!?
+
+Well .. it goes after spring ;)
+
+== Features
+
+* Several helpers for a neat, modern code
+* A easy and flexible support for generate JSON, extending Sytem.JSON, not replacing it.
+* SICO (Simple Injection Container): a lightweight but capable Dependency Injection tool
+* Some object services ready for use in your code
+
+** IConfig: Simple and extensible service for configure your application in JSON.
+** ILogger: A logging service totally inspired by Log4J http://logging.apache.org/log4j/1.2/
+** IStandardPaths: Easy, etensible and unified access to all paths you will ever need.
+** Nullable types
+
+* Experimental in progress
+** Some utils to develop Command Line Interfaces
+** Queryable types
