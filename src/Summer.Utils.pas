@@ -59,6 +59,41 @@ type
     property OnDestroy: TProc<TComponent> read FOnDestroy write FOnDestroy;
   end;
 
+  IOwnedList = interface
+    ['{60FA02D9-7CC9-40D8-9CC2-7CF085E6F761}']
+    procedure Clear;
+    procedure Add(Owned: TObject);
+    function Contains(Value: TObject): Boolean;
+    function Count: Integer;
+    function IsEmpty: Boolean;
+  end;
+
+  TOwnedList = class(TInterfacedObject, IOwnedList)
+  strict private
+    FOwneds: TObjectList<TObject>;
+  private
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Clear;
+    procedure Add(Owned: TObject);
+    function Contains(Value: TObject): Boolean;
+    function Count: Integer;
+    function IsEmpty: Boolean;
+  end;
+
+  TPurgatory = record
+  private
+    FOwneList: IOwnedList;
+    function OwneList: IOwnedList;
+  public
+    procedure Clear;
+    procedure Add(Owned: TObject);
+    function Contains(Value: TObject): Boolean;
+    function Count: Integer;
+    function IsEmpty: Boolean;
+  end;
+
   TWeakInterfaced = class(TInterfacedObject, IInterface)
   private
     FWeakRef: Boolean;
@@ -225,6 +260,81 @@ begin
   OutputDebugString(PChar(Text));
 end;
 {$ENDIF}
+
+{ TOwnedList }
+
+procedure TOwnedList.Clear;
+begin
+  FOwneds.Clear;
+end;
+
+function TOwnedList.Contains(Value: TObject): Boolean;
+begin
+  Result := FOwneds.Contains(Value);
+end;
+
+function TOwnedList.Count: Integer;
+begin
+  Result := FOwneds.Count;
+end;
+
+constructor TOwnedList.Create;
+begin
+  inherited Create;
+  FOwneds := TObjectList<TObject>.Create(True);
+end;
+
+destructor TOwnedList.Destroy;
+begin
+  FOwneds.Free;
+  inherited;
+end;
+
+function TOwnedList.IsEmpty: Boolean;
+begin
+  Result := FOwneds.Count = 0;
+end;
+
+procedure TOwnedList.Add(Owned: TObject);
+begin
+  FOwneds.Add(Owned);
+end;
+
+{ TPurgatory }
+
+procedure TPurgatory.Add(Owned: TObject);
+begin
+  OwneList.Add(Owned);
+end;
+
+procedure TPurgatory.Clear;
+begin
+  OwneList.Clear;
+end;
+
+function TPurgatory.Contains(Value: TObject): Boolean;
+begin
+  Result := OwneList.Contains(Value);
+end;
+
+function TPurgatory.Count: Integer;
+begin
+  Result := OwneList.Count
+end;
+
+function TPurgatory.IsEmpty: Boolean;
+begin
+  Result := OwneList.IsEmpty;
+end;
+
+function TPurgatory.OwneList: IOwnedList;
+begin
+  if FOwneList = nil then
+    FOwneList := TOwnedList.Create;
+  Result := FOwneList;
+end;
+
+
 { TFreeNotifier }
 
 destructor TFreeNotifier.Destroy;

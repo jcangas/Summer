@@ -1,0 +1,45 @@
+package SummerFW.Utils;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$LIBSUFFIX '210'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  dbrtl;
+
+contains
+  SummerFW.Utils.CLI in '..\SummerFW.Utils.CLI.pas',
+  SummerFW.Utils.Log in '..\SummerFW.Utils.Log.pas',
+  SummerFW.Utils.RTL in '..\SummerFW.Utils.RTL.pas',
+  SummerFW.Utils.Rules in '..\SummerFW.Utils.Rules.pas',
+  SummerFW.Utils.DuckIntf in '..\SummerFW.Utils.DuckIntf.pas',
+  SummerFW.Utils.SICO in '..\SummerFW.Utils.SICO.pas',
+  SummerFW.Utils.StdPaths in '..\SummerFW.Utils.StdPaths.pas';
+
+end.
