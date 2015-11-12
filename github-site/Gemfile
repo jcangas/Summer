@@ -1,0 +1,11 @@
+# A sample Gemfile
+source "https://rubygems.org"
+
+gem "jekyll", "3.0"
+gem 'asciidoctor'
+group :jekyll_plugins do
+  gem "jekyll-asciidoc", :git => 'git://github.com/asciidoctor/jekyll-asciidoc.git', :ref => 'ef82b45'
+  gem 'jekyll-paginate'
+  gem 'redcarpet'
+  gem 'pygments.rb'
+end
