@@ -65,7 +65,7 @@
                 <ul class="nav navbar-nav navbar-right">
                     {% for item in site.data.nav.main %}
                         <li>
-                            <a class='button' href="{% unless item.external == true %}{{ site.baseurl }}{% endunless %}{{ item.url }}"><span class={{ item.class }}>{{ item.text }}</span></a>
+                            <a class='button' href="{% unless item.external == true %}./{{ site.baseurl }}{% endunless %}{{ item.url }}"><span class={{ item.class }}>{{ item.text }}</span></a>
                         </li>
                     {% endfor %}
                 </ul>
