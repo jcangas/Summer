@@ -11,7 +11,7 @@ includes_dir: ./_includes
 # Handling Reading
 safe:         false
 include:      [".htaccess", "_pages"]
-exclude:      ["doc", "Gemfile", "Gemfile.lock", "package.json", "gulfile.js", "node_modules"]
+exclude:      ["doc", "Gemfile", "Gemfile.lock", "package.json", "gulpfile.js", "node_modules"]
 keep_files:   [".git", ".svn"]
 encoding:     "utf-8"
 

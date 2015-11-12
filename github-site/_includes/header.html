@@ -64,13 +64,11 @@
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav navbar-right">
                     {% for item in site.data.nav.main %}
-                        <li> 
-                            <a class='button' href="{{ item.url }}"><span class={{ item.class }}>{{ item.text }}</span></a>
+                        <li>
+                            <a class='button' href="{% unless item.external == true %}{{ site.baseurl }}{% endunless %}{{ item.url }}"><span class={{ item.class }}>{{ item.text }}</span></a>
                         </li>
                     {% endfor %}
                 </ul>
             </div>
         </div>
     </nav>
-
-

@@ -1,5 +1,5 @@
 main:
     - { url: '/', text: 'Blog' }
     - { url: '/tutorial', text: 'Tutorial' }
-    - { url: 'https://github.com/jcangas/SummerFW4D/releases', text: 'Downloads', class: 'downloadicon'}
-    - { url: 'https://github.com/jcangas/SummerFW4D', text: 'Fork on GitHub', class: 'oticon'}
+    - { external: true, url: 'https://github.com/jcangas/SummerFW4D/releases', text: 'Downloads', class: 'downloadicon'}
+    - { external: true, url: 'https://github.com/jcangas/SummerFW4D', text: 'Fork on GitHub', class: 'oticon'}
