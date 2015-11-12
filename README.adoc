@@ -1,6 +1,8 @@
 = Summer
  Give some superpowers to your Delphi code
 
+http://jcangas.github.io/SummerFW4D[]
+
 == Summer? WTF!?
 
 Well .. it goes after spring ;)

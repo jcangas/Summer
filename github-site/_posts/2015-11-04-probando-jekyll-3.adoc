@@ -1,0 +1,18 @@
+---
+layout: inner
+date: 2015-11-04
+---
+= Probando Jekyll 3
+
+Esto es una prubea de Jekyll3 + AsciiDoctor usando la gema jekyll-asciidc.
+Creado con Visual Code para Mac OSX.
+
+Aqui va una tabla
+
+.Mi tabla chuli
+[options="header,footer"]
+|====================
+| texto | texto | texto
+| texto | texto | texto
+| texto | texto | texto
+|====================
