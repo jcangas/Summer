@@ -1,0 +1,9 @@
+---
+layout: inner
+date: 2015-11-04
+lead_text: We are building a new site for Summer project
+title: Announce new site
+---
+We are building a new site for the project.
+
+You are here

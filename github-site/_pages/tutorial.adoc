@@ -1,0 +1,10 @@
+---
+layout: inner
+permalink: /tutorial/
+categories: documentation tutorials
+lead_text: Learning how to use Summer
+---
+= Summer Tutorials
+
+Comming soon ...
+

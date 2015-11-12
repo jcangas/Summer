@@ -1,7 +1,7 @@
 # Site Settings
-title: 'Jorge Cangas Blog'
-description: 'An Open-Source Bootstrap 3 Jekyll Theme by Scotch'
-footer_text: "#{jekyll.environment} This text is footer text. Footer text goes here."
+title: 'Summer'
+description: 'Give some superpowers to your Delphi code'
+footer_text: "(c) Jorge L. Cangas  - jorge.cangas@gmail.com"
 
 # Admin Settings
 admin_name: 'Jorge L. Cangas'
