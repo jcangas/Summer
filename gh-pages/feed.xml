@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Summer</title>
+    <description>Give some superpowers to your Delphi code</description>
+    <link>/SummerFW4D/SummerFW4D/</link>
+    <atom:link href="/SummerFW4D/SummerFW4D/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Thu, 12 Nov 2015 18:14:29 +0000</pubDate>
+    <lastBuildDate>Thu, 12 Nov 2015 18:14:29 +0000</lastBuildDate>
+    <generator>Jekyll v3.0.0</generator>
+    
+      <item>
+        <title>Announce new site</title>
+        <description>&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We are building a new site for the project.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;You are here&lt;/p&gt;
+&lt;/div&gt;</description>
+        <pubDate>Wed, 04 Nov 2015 00:00:00 +0000</pubDate>
+        <link>/SummerFW4D/SummerFW4D/blog/2015/ann-new-site.html</link>
+        <guid isPermaLink="true">/SummerFW4D/SummerFW4D/blog/2015/ann-new-site.html</guid>
+        
+        
+      </item>
+    
+  </channel>
+</rss>
