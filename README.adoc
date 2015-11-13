@@ -4,9 +4,9 @@ Give some superpowers to your Delphi code
 :doctype: article
 :encoding: utf-8
 :lang: en
-!:numbered:
+:!numbered:
  
- http://jcangas.github.io/SummerFW4D[]
+http://jcangas.github.io/SummerFW4D[]
 
 == Summer? WTF!?
 
