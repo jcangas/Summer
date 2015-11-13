@@ -6,5 +6,38 @@ lead_text: Learning how to use Summer
 ---
 = Summer Tutorials
 
-Comming soon ...
+Summer brings a lot of features to allow for more smart Delphi code. Let see an overview.
 
+== Features
+
+=== SICO (Simple Injection Container): a lightweight but capable Dependency Injection container.
+
+This allow yo to inject behavior in to you application in a neat, extensible and easy way.
+
+Around of this feature, Summer offers you some ready to use Object Services.
+
+== IConfig
+
+Simple and extensible service for configure your application in JSON format.
+
+== ILogger
+
+A log service totally inspired by http://logging.apache.org/log4j/1.2/[Log4J]
+
+== IStandardPaths
+
+The easy, extensible and unified access to all paths you will ever need.
+
+=== Several util and helpers for a neat, modern code.
+
+** Nullable types
+** Helpers to write JSON, handle Enums, Invoke methods using RTTI,...
+
+=== JSON tools
+
+An Easy and flexible support for generate JSON, extending Sytem.JSON, not replacing it.
+Some custom attributes allows easy control of the generated JSON.
+
+== Features not so ready (in progress)
+** Some utils to develop Command Line Interfaces
+** Queryable types

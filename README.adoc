@@ -1,7 +1,12 @@
 = Summer
- Give some superpowers to your Delphi code
-
-http://jcangas.github.io/SummerFW4D[]
+Jorge L. Cangas, jorge.cangas@gmail.com
+Give some superpowers to your Delphi code
+:doctype: article
+:encoding: utf-8
+:lang: en
+!:numbered:
+ 
+ http://jcangas.github.io/SummerFW4D[]
 
 == Summer? WTF!?
 
@@ -9,16 +14,49 @@ Well .. it goes after spring ;)
 
 == Features
 
-* Several helpers for a neat, modern code
-* A easy and flexible support for generate JSON, extending Sytem.JSON, not replacing it.
-* SICO (Simple Injection Container): a lightweight but capable Dependency Injection tool
-* Some object services ready for use in your code
+=== SICO (Simple Injection Container): a lightweight but capable Dependency Injection container.
 
-** IConfig: Simple and extensible service for configure your application in JSON.
-** ILogger: A logging service totally inspired by Log4J http://logging.apache.org/log4j/1.2/
-** IStandardPaths: Easy, etensible and unified access to all paths you will ever need.
+This allow yo to inject behavior in to you application in a neat, extensible and easy way.
+
+[NOTE]
+====
+Around of this feature, Summer offers you some ready to use Object Services.
+====
+
+== IConfig
+
+Simple and extensible service for configure your application in JSON format.
+
+== ILogger
+
+A log service totally inspired by http://logging.apache.org/log4j/1.2/[Log4J]
+
+Allow send log to any combination of:
+
+* a file
+* console
+* Windows OutputDebugString
+* iOS or Android console
+* Windows Event log
+* a TStrings object in your application.
+* Your custom log writer
+
+And you can change where your log message are writed without touch the code that send the messages.
+
+== IStandardPaths
+
+The easy, extensible and unified access to all paths you will ever need.
+
+=== Several util and helpers for a neat, modern code.
+
 ** Nullable types
+** Helpers to write JSON, handle Enums, Invoke methods using RTTI,...
 
-* Experimental in progress
+=== JSON tools
+
+An Easy and flexible support for generate JSON, extending Sytem.JSON, not replacing it.
+Some custom attributes allows easy control of the generated JSON.
+
+== Features not so ready (in progress)
 ** Some utils to develop Command Line Interfaces
 ** Queryable types
