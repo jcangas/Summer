@@ -231,10 +231,13 @@ var
   NewPair: TJSONPair;
 begin
   Clear;
-  for Pair in Value do begin
-    NewPair := Pair.Clone as TJSONPair;
-    NewPair.Owned := Pair.GetOwned;
-    FJSONObject.AddPair(NewPair);
+  // Prevent AV when value is nil
+  if Value <> nil then begin
+    for Pair in Value do begin
+      NewPair := Pair.Clone as TJSONPair;
+      NewPair.Owned := Pair.GetOwned;
+      FJSONObject.AddPair(NewPair);
+    end;
   end;
 end;
 
