@@ -32,6 +32,8 @@ a {
 }
 .btn {
     text-transform: uppercase;
+    font-size: 15px;
+    padding: 10px 10px;
     font-weight: 400;
     @extend %oswald;
 }
@@ -78,7 +80,6 @@ h1.special {
     text-align: center;
     overflow: hidden;
     margin: 0;
-    text-transform: uppercase;
     @extend %oswald;
     font-size: 69px;
     line-height: 69px;
@@ -96,9 +97,9 @@ h1.special {
             position: absolute;
             display: block;
             height: 1px;
-            background: #e8e8e8;
+            background: black;
             width: 99999999px;
-            top: 50%;
+            top: 100%;
             transform: translateY(-50%);
         }
 
@@ -116,10 +117,10 @@ h1.special {
 
     h2 {
         margin: 0;
-        font-size: 100px;
+        font-size: 50px;
         font-weight: 400;
         letter-spacing: -0.05em;
-        line-height: 100px;
+        line-height: 50px;
     }
 
     .featurette {
@@ -205,7 +206,7 @@ h1.special {
     }
 
     .read-more {
-        margin-top: 50px;
+        margin-top: 1px;
         width: 100%;
         max-width: 175px;
         position: relative;
@@ -272,6 +273,27 @@ pre {
     margin: 75px -100px;
 }
 
+a.button {
+  display: block;
+  float: left;
+  margin-right: 5px;
+  font-size: 15px;
+  line-height: 25px;
+}
+
+a.button span {
+  display: block;
+  height: 23px;
+  padding-left: 50px;
+}
+
+a.button span.oticon {
+    background: transparent url(../images/octocat-icon.png) 12px 50% no-repeat;
+ }
+
+a.button span.downloadicon {
+    background: transparent url(../images/zip-icon.png) 12px 50% no-repeat;
+ }
 
 @media only screen and (max-width : 991px) {
     pre {

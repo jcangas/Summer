@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+ <title>Summer</title>
+ <link href="/SummerFW4D/atom.xml" rel="self"/>
+ <link href="/SummerFW4D/"/>
+ <updated>2015-11-13T19:03:40+00:00</updated>
+ <id>/SummerFW4D</id>
+ <author>
+   <name>Jorge L. Cangas</name>
+   <email>jorge.cangas@gmail.com</email>
+ </author>
+
+ 
+ <entry>
+   <title>Announce new site</title>
+   <link href="/SummerFW4D/blog/2015/ann-new-site.html"/>
+   <updated>2015-11-04T00:00:00+00:00</updated>
+   <id>/SummerFW4D/blog/2015/ann-new-site</id>
+   <content type="html">&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;We are building a new site for the project.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;You are here&lt;/p&gt;
+&lt;/div&gt;</content>
+ </entry>
+ 
+
+</feed>
