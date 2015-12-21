@@ -157,12 +157,11 @@ type
   private
     FStrings: TStrings;
     FCapacity: Integer;
-    FClearOnCapacity: Boolean;
   protected
     procedure DoWriteText(Text: string); override;
   public
     constructor Create(Strings: TStrings; const Capacity: Integer = 0;
-      FormatterClass: TLog.FormatterClass = nil; ClearOnCapacity: Boolean = False);
+      FormatterClass: TLog.FormatterClass = nil);
   end;
 
   TConsoleLogWriter = class(TWriteTextLogWriter)
@@ -460,12 +459,11 @@ end;
 { TStringsLogger }
 
 constructor TStringsLogWriter.Create(Strings: TStrings;
-  const Capacity: Integer = 0; FormatterClass: TLog.FormatterClass = nil; ClearOnCapacity: Boolean = False);
+  const Capacity: Integer = 0; FormatterClass: TLog.FormatterClass = nil);
 begin
   inherited Create(FormatterClass);
   FStrings := Strings;
   FCapacity := Capacity;
-  FClearOnCapacity := ClearOnCapacity;
 end;
 
 procedure TStringsLogWriter.DoWriteText(Text: string);
@@ -474,21 +472,13 @@ begin
     procedure
     begin
       FStrings.Add(Text);
-
-      if (FCapacity > 0) then
-      begin
+      if (FCapacity > 0) then begin
         FStrings.BeginUpdate;
-        try
-           while (FCapacity < FStrings.Count) do
-           begin
-              if FClearOnCapacity then
-                 FStrings.Clear // Fix-ZAVA
-              else
-                 FStrings.Delete(0);
-           end;
-        finally
-           FStrings.EndUpdate;
+        while (FCapacity < FStrings.Count) do begin
+          //FStrings.Clear; // Fix-ZAVA
+          FStrings.Delete(0);
         end;
+        FStrings.EndUpdate;
       end;
     end);
 end;
