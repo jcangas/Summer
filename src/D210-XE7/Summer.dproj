@@ -272,6 +272,7 @@
         <DCCReference Include="..\Summer.Encryption.pas"/>
         <DCCReference Include="..\Summer.IJSONProperties.pas"/>
         <DCCReference Include="..\Summer.JSONProperties.pas"/>
+        <DCCReference Include="..\Summer.Variants.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

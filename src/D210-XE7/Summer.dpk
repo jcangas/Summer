@@ -56,6 +56,7 @@ contains
   Summer.Queryable in '..\Summer.Queryable.pas',
   Summer.Encryption in '..\Summer.Encryption.pas',
   Summer.IJSONProperties in '..\Summer.IJSONProperties.pas',
-  Summer.JSONProperties in '..\Summer.JSONProperties.pas';
+  Summer.JSONProperties in '..\Summer.JSONProperties.pas',
+  Summer.Variants in '..\Summer.Variants.pas';
 
 end.

@@ -1,0 +1,45 @@
+= To Do
+:source-highlighter: highlightjs
+
+== New Features
+
+=== JSON driven json generation
+
+En el método ToJSONObject, en lugar de una lista de nombres en un atributo, pasar una "plantilla" basada en json. La plantillas seria simplmente una instancia ejemplo, pero omitiendo los valores de las claves
+
+[source, json]
+----
+{ "Fecha":,
+  "Hora":,
+  "Paciente": {
+    "Apellidos":, "Nombre":, "NumPac":, "TextoTrato":
+    },
+  "Texto":
+}
+----
+
+
+[source, delphi]
+----
+TJSON.ToJsonObject(Entity, '"Fecha":,"Hora":,"Paciente": {"Apellidos":, "Nombre":, "NumPac":, "TextoTrato":}, "Texto":')
+----
+
+O tal vez en un JSONAttr para la clase. Algo asi:
+
+[source, delphi]
+----
+Attr := JSONTemplateAttribute.Create(True, '"Fecha":,"Hora":,"Paciente": {"Apellidos":, "Nombre":, "NumPac":, "TextoTrato":}, "Texto":');
+
+TJSON.ToJsonObject(Entity, Attr);
+----
+
+Tambien podemos considerar admitir que la plantilla se escriba en un "json aligerado", pero facil de convertir en json valido con algo de RegExp, de forma que nos evitemos hacer un parser especifico.
+
+[source, delphi]
+----
+TJSON.ToJsonObject(Entity, 'Fecha, Hora, Paciente: {Apellidos, Nombre, NumPac, TextoTrato}, Texto');
+----
+
+== Enhancements / Refactorings
+
+== Bug fixing
