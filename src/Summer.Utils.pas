@@ -15,6 +15,7 @@ uses
   System.TypInfo,
   System.SysUtils,
   System.Classes,
+  System.Diagnostics,
   System.Rtti,
   System.JSON;
 
@@ -138,7 +139,7 @@ type
       procedure SetValue(const Value: TValue);
     public
       property index: Integer read FIndex;
-      property name: string read FName;
+      property Name: string read FName;
       property Value: TValue read FValue write SetValue;
       property AsVariant: Variant read GetAsVariant;
       property AsJSONValue: TJSONValue read GetAsJSONValue;
@@ -147,7 +148,7 @@ type
       property IsProperty: Boolean read GetIsProperty;
     end;
 
-    TEnumProc = reference to procedure(var Item: TItem; var StopEnum: Boolean);
+  TEnumProc = reference to procedure(var Item: TItem; var StopEnum: Boolean);
   private
   strict private
     RC: TRTTIContext;
@@ -210,6 +211,12 @@ type
 
   TAnyObjecListClass = class of TAnyObjecList;
 
+  TBenchmark = class
+  public
+    class function Measure(P: TProc): Int64;
+    class function StopWatch(P: TProc): TStopWatch;
+  end;
+
 implementation
 
 uses
@@ -229,6 +236,18 @@ uses
     Posix.Stdlib
   {$ENDIF POSIX}
     ;
+
+class function TBenchmark.Measure(P: TProc): Int64;
+begin
+  Result := StopWatch(P).ElapsedMilliseconds;
+end;
+
+class function TBenchmark.StopWatch(P: TProc): TStopWatch;
+begin
+  Result := TStopWatch.StartNew;
+  P();
+  Result.Stop;
+end;
 
 {$IF DEFINED(IOS)}
 
@@ -333,7 +352,6 @@ begin
     FOwneList := TOwnedList.Create;
   Result := FOwneList;
 end;
-
 
 { TFreeNotifier }
 
