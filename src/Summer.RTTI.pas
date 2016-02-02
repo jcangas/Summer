@@ -72,7 +72,8 @@ type
   public
     class procedure InjectFields(Target: TObject; Source: TDataset);
     class procedure InjectItems(Target: TObject; Source: TSlice);
-    class procedure InjectProps(Target: TObject; Source: TObject);
+    class procedure InjectProps(Target: TObject; Source: TObject);overload;
+    class procedure InjectProps(Target: TObject; Source: TObject; Names: array of string);overload;
   end;
 
   TVoteQuality = (VqRequires, VqPrefers);
@@ -126,6 +127,7 @@ implementation
 uses
   System.Variants,
   System.RegularExpressionsCore,
+  System.StrUtils,
   Summer.JSON,
   Summer.Nullable;
 
@@ -401,6 +403,12 @@ end;
 { TValuesInjector }
 
 class procedure TValuesInjector.InjectProps(Target: TObject; Source: TObject);
+begin
+  InjectProps(Target, Source, []);
+end;
+
+class procedure TValuesInjector.InjectProps(Target, Source: TObject;
+  Names: array of string);
 var
   RC: TRttiContext;
   RTSource: TRttiInstanceType;
@@ -419,10 +427,9 @@ begin
     for PropSource in RTSource.GetProperties do begin
       if PropSource.PropertyType.IsInstance then
         Continue;
+      if (Length(Names) > 0) and (IndexText(PropSource.Name, Names) = -1) then Continue;
       PropTarget := RTTarget.GetProperty(PropSource.Name) as TRttiInstanceProperty;
-      if not PropTarget.IsWritable then
-        Continue;
-      if Assigned(PropTarget) then
+      if Assigned(PropTarget) and PropTarget.IsWritable then
         PropTarget.SetValue(Target, PropSource.GetValue(Source));
     end;
   except

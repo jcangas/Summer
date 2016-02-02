@@ -56,7 +56,7 @@ type
       ISO8601 // 2015-04-22T09:53:59.784+02:00
       );
 
-    JSONError = class(Exception);
+  JSONError = class(Exception);
   protected
     class function StrJSONToFloat(Value: string): Double;
     class function Error(Msg: string; Args: array of const): JSONError;
@@ -700,6 +700,8 @@ class function TJSON.ToJSONObject(const AObject: TObject; Select: JSONAttribute 
 
       if Assigned(Select) then
         FmtPropName := Select.FormatName
+      else if Assigned(PropAttr) then
+        FmtPropName := PropAttr.Names[0]
       else
         FmtPropName := '%s';
       FmtPropName := Format(FmtPropName, [PropSource.Name]);
