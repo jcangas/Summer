@@ -6,7 +6,7 @@ Give some superpowers to your Delphi code
 :lang: en
 :!numbered:
  
-http://jcangas.github.io/SummerFW4D[]
+http://jcangas.github.io/Summer[]
 
 == Summer? WTF!?
 
