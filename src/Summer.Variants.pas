@@ -3,6 +3,10 @@ unit Summer.Variants;
 interface
 
 type
+  /// <summary>
+  /// Helper for varianr to DateTime conversion.
+  ///  Return argument Def when the variant value is null
+  /// </summary>
   VariantHelper = record helper for Variant
   public
     function ToDate(Def: TDate = 0): TDate;

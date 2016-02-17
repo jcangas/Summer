@@ -1,0 +1,3 @@
+node1 > NAME = default, IMG = model-tree/ST_Package Diagram.gif, REF = default.txvpck.html->classFrame, REF = doc-files/default.txvpck.html->imageFrame;
+node0 > NAME = Summer, IMG = model-tree/ST_Project.gif, REF = overview-summary.html->classFrame, REF = doc-files/default.txvpck.html->imageFrame, CHILDS = node1;
+ROOT > CHILDS = node0

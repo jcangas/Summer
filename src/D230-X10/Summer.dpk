@@ -1,0 +1,62 @@
+package Summer;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$LIBSUFFIX 'D210'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  dbrtl;
+
+contains
+  Summer.CLI in '..\Summer.CLI.pas',
+  Summer.Config in '..\Summer.Config.pas',
+  Summer.DuckIntf in '..\Summer.DuckIntf.pas',
+  Summer.IConfig in '..\Summer.IConfig.pas',
+  Summer.ILogger in '..\Summer.ILogger.pas',
+  Summer.Win.ISvcCtrl in '..\Summer.Win.ISvcCtrl.pas',
+  Summer.Logger in '..\Summer.Logger.pas',
+  Summer.SICO in '..\Summer.SICO.pas',
+  Summer.StdPaths in '..\Summer.StdPaths.pas',
+  Summer.Utils in '..\Summer.Utils.pas',
+  Summer.Win.SvcCtrl in '..\Summer.Win.SvcCtrl.pas',
+  Summer.JSON in '..\Summer.JSON.pas',
+  Summer.RTTI in '..\Summer.RTTI.pas',
+  Summer.IEncryption in '..\Summer.IEncryption.pas',
+  Summer.DateTime in '..\Summer.DateTime.pas',
+  Summer.Enum in '..\Summer.Enum.pas',
+  Summer.Strings in '..\Summer.Strings.pas',
+  Summer.DataSet in '..\Summer.DataSet.pas',
+  Summer.Nullable in '..\Summer.Nullable.pas',
+  Summer.Queryable in '..\Summer.Queryable.pas',
+  Summer.Encryption in '..\Summer.Encryption.pas',
+  Summer.IJSONProperties in '..\Summer.IJSONProperties.pas',
+  Summer.JSONProperties in '..\Summer.JSONProperties.pas',
+  Summer.Variants in '..\Summer.Variants.pas';
+
+end.

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Model name="Summer" id="Summer" language="delphi">
+  <Diagram name="default" id="ID=9" metaclass="Namespace Diagram" file="default.txvpck.html">
+    <Property name="defaultDiagram">true</Property>
+    <DiagramReference id="ID=3598">
+      <Property name="Color Area">Whole Shape</Property>
+      <Property name="Gradient ON">False</Property>
+      <Property name="Gradient color 1">255, 255, 255</Property>
+      <Property name="Gradient Mode">Vertical</Property>
+      <Property name="Gradient color 2">255, 255, 255</Property>
+    </DiagramReference>
+  </Diagram>
+</Model>
