@@ -1,4 +1,18 @@
-// A Simple Injection Container
+{== License ==
+- "Summer for Delphi" by Jorge L. Cangas <jorge.cangas@gmail.com> is licensed under CC BY 4.0
+-  Summer for Delphi - http://github.com/jcangas/Summer
+-  Summer - Copyright(c) Jorge L. Cangas, Some rights reserved.
+-  Your reuse is governed by the Creative Commons Attribution 4.0 License http://creativecommons.org/licenses/by/4.0/
+}
+
+
+/// <summary>
+/// SICO Implementa un Dependency Injection Container https://en.wikipedia.org/wiki/Dependency_injection
+/// SICO es acrónimo de Simple Injection COntainer. La aparición del término simple,
+/// está motivada porque se ha buscado una implmentación simple combinando
+/// los patrones Fluent Interface (https://en.wikipedia.org/wiki/Fluent_interface) y
+/// Strategy (https://en.wikipedia.org/wiki/Strategy_pattern).
+/// </summary>
 
 unit Summer.SICO;
 
@@ -16,6 +30,31 @@ const
 type
   TDIContainer = class;
   TFactoryKind = (fkPure, fkByName);
+  /// <summary>
+  /// Regla para injectar una dependencia. Los objetos de esta clase
+  /// son las estrategias definidas para crear las instancias de las
+  /// dependencias.
+  /// Una regla captura en esencia 3 conceptos
+  ///  * El tipo que se pretende instanciar
+  ///  property ServiceType: PTypeInfo read FServiceType write SetServiceType;
+  ///  * El tipo usado como implementción. El objet devuelto será realmente de este tipo
+  /// property ImplementorType: PTypeInfo;
+  ///  Un algortimo (la "strategy") para instanciar el ImplementorType.
+  ///  El implmentor puede ser por nombnre o anónimo
+  /// property ByNameStrategy: TFunc<string, TObject> read FByNameStrategy write SetByNameStrategy;
+  /// Lo más común para instanciar el Implmentor será invocar su constructor
+  ///  sin argumentos. Esta es la opción por defecto.
+  ///  Si se necesitan argumentos, se puden capturar usando Construct([...])
+  ///  Si la instanciación es compleja, podemoos usar Factory(...)
+  ///  Finalmente, la regla, captura modelo de ciclo de vida para el Implmentor
+  ///  Singleton: Solo hay una unica instancia del Implmentor y cada vez
+  ///  que se solicita la dependencia, se retorna dicha instancia.
+  ///  El Singleton se destruye al ser destruido la instancia de SICO
+  ///  ThreadSingleton. ** No implmentado aún**. te caso SICO, mantiente un Singleton
+  ///  para cada thread que solicita la dependencia.
+  ///  En otro caso, SICO fabrica una instancia cada vez que se solicita la dependencia.
+  /// </summary>
+
   TDIRule = class(TObject)
   private
     class var FRTTIContext: TRTTIContext;
@@ -51,17 +90,33 @@ type
     property IsSingleton: Boolean read FIsSingleton write FIsSingleton;
   public
     destructor Destroy; override;
+    /// Fluent Api: Delega la creación de un servicio en otro
     function FordwardTo(const AType: PTypeInfo): TDIRule;
+    /// Fluent Api: captura el Tipo de la dependencia
     function ForService(const AType: PTypeInfo; const Name: string = ''): TDIRule;
+    /// Fluent Api: captura el algoritmo par instanciar una dependencia anonima
     function Factory(Builder: TFunc<TObject>): TDIRule;overload;
+    /// Fluent Api: captura el algoritmo par instanciar una dependencia nombrada
     function Factory(Builder: TFunc<string, TObject>): TDIRule;overload;
-    function Construct(Arg: TValue): TDIRule;overload;
+    /// Fluent Api: caso simple de Factory, si simplemente se pretende invocar el construtor
     function Construct(Args: TArray<TValue>): TDIRule;overload;
+    /// Fluent Api: Construct de un solo argumento para evitar el uso de []
+    function Construct(Arg: TValue): TDIRule;overload;
+    /// Fluent Api: mark implmentor as a singleton
+    function AsSingleton: TDIRule;
+
+    //  Pending to implement:
+    //  function AsThreadSingleton: TDIRule;
+
+    /// Argumentos capturados usando Construct
     property Args: TArray<TValue> read FArgs write FArgs;
+    /// Contiene el algoritmo de creacion definido mediante Factory/Construct
     property BuildStrategy: TFunc<TObject> read FBuildStrategy write SetBuildStrategy;
+    /// Contiene el algoritmo de creacion por nombre definido mediante Factory/Construct
     property ByNameStrategy: TFunc<string, TObject> read FByNameStrategy write SetByNameStrategy;
   end;
 
+  /// Colección de reglas posibles para instanciar una misma dependencia
   TServiceRules = class
   private
     FServiceType: PTypeInfo;
@@ -78,12 +133,17 @@ type
     property ServiceType: PTypeInfo read FServiceType;
   end;
 
+  /// Clase genérica para facilitar la creacicón de Reglas para un tipo dado
+  ///  T representa el Implmentor Type
+  ///  Notar que las instancias de esta clase se crean mediante el meétodo factoria
+  ///  "Returns" de la clase TDIContainer
+  ///
   TDIRule<T: class> = class(TDIRule)
   private
   public
     constructor Create(Container: TDIContainer);
-    function ForService<TService>(const Name: string = ''): TDIRule<T>;overload;
     function FordwardTo<TService>: TDIRule<T>;
+    function ForService<TService>(const Name: string = ''): TDIRule<T>;overload;
     function Factory(Builder: TFunc<T>): TDIRule<T>;overload;
     function Factory(Builder: TFunc<string, T>): TDIRule<T>;overload;
     function AsSingleton: TDIRule<T>;
@@ -91,7 +151,10 @@ type
     function Construct(Args: TArray<TValue>): TDIRule<T>;overload;
   end;
 
+  /// Colección de todas las reglas conocidas por el SICO
   TDIRules = TObjectDictionary<PTypeInfo, TServiceRules>;
+
+  /// Un contenedor para injección de dependencias
   TDIContainer = class
   private
     class var FDIContainer: TDIContainer;
@@ -111,12 +174,17 @@ type
     destructor Destroy; override;
     procedure Clear;
     class function NoRuleFoundError(ServiceType: PTypeInfo; Name: string): Exception;
-    function Returns(Info: PTypeInfo): TDIRule;overload;
-    function Returns<T: class>: TDIRule<T>;overload;
-    function GetService(Info: PTypeInfo; Name: string=''): TValue;overload;
+    /// <summary> Crea una regla que usa ImplmentorType </summary>
+    function Returns(ImplmentorType: PTypeInfo): TDIRule;overload;
+    /// <summary> Crea una regla que usa TImplmentor </summary>
+    function Returns<TImplementor: class>: TDIRule<TImplementor>;overload;
+    /// <summary> Retorna la dependencia usando las reglas definidas mediante Returns</summary>
     function GetService<TService: IInterface>(Name: string = ''): TService;overload;
+    /// <summary> Retorna la dependencia usando las reglas definidas mediante Returns</summary>
+    function GetService(Info: PTypeInfo; Name: string=''): TValue;overload;
   end;
 
+/// Returns the global injection container
 function SICO: TDIContainer; inline;
 
 implementation
@@ -124,6 +192,9 @@ implementation
 uses
   Summer.Utils,
   Summer.RTTI;
+
+resourcestring
+  StrSICOErrorNoInjec = 'SICO error: No injection Rule %s for service <%s>';
 
 function ArgMatch(Arg: TValue; Param: TRttiParameter): Boolean;
 begin
@@ -298,6 +369,12 @@ begin
   Result := FRTTIContext.GetType(Info);
 end;
 
+function TDIRule.AsSingleton: TDIRule;
+begin
+  Result := Self;
+  IsSingleton := True;
+end;
+
 procedure TDIRule.BeginUpdate;
 begin
   Inc(FUpdateCount);
@@ -349,7 +426,7 @@ end;
 function TDIRule<T>.AsSingleton: TDIRule<T>;
 begin
   Result := Self;
-  Result.IsSingleton := True;
+  inherited AsSingleton;
 end;
 
 function TDIRule<T>.Construct(Args: TArray<TValue>): TDIRule<T>;
@@ -413,23 +490,23 @@ begin
   inherited;
 end;
 
-function TDIContainer.Returns(Info: PTypeInfo): TDIRule;
+function TDIContainer.Returns(ImplmentorType: PTypeInfo): TDIRule;
 begin
   TMonitor.Enter(Self);
   try
-    Result := TDIRule.Create(Self, Info);
-    Result.ForService(Info);
+    Result := TDIRule.Create(Self, ImplmentorType);
+    Result.ForService(ImplmentorType);
   finally
     TMonitor.Exit(Self);
   end;
 end;
 
-function TDIContainer.Returns<T>: TDIRule<T>;
+function TDIContainer.Returns<TImplementor>: TDIRule<TImplementor>;
 begin
   TMonitor.Enter(Self);
   try
-    Result := TDIRule<T>.Create(Self);
-    Result.ForService(TypeInfo(T));
+    Result := TDIRule<TImplementor>.Create(Self);
+    Result.ForService(TypeInfo(TImplementor));
   finally
     TMonitor.Exit(Self);
   end;
@@ -437,7 +514,7 @@ end;
 
 class function TDIContainer.NoRuleFoundError(ServiceType: PTypeInfo; Name: string): Exception;
 begin
-  Result := Exception.CreateFmt('SICO error: No injection Rule %s for service <%s>', [Name, ServiceType.Name]);
+  Result := Exception.CreateFmt(StrSICOErrorNoInjec, [Name, ServiceType.Name]);
 end;
 
 function TDIContainer.GetServiceRule(ServiceType: PTypeInfo; Name: string): TDIRule;

@@ -1,7 +1,8 @@
-{ Summer for Delphi http://github.com/jcangas/Summer
-  Summer by Jorge L. Cangas <jorge.cangas@gmail.com>
-  Summer - Copyright(c) Jorge L. Cangas, Some rights reserved.
-  Your reuse is governed by the Creative Commons Attribution 3.0 License
+{== License ==
+- "Summer for Delphi" by Jorge L. Cangas <jorge.cangas@gmail.com> is licensed under CC BY 4.0
+-  Summer for Delphi - http://github.com/jcangas/Summer
+-  Summer - Copyright(c) Jorge L. Cangas, Some rights reserved.
+-  Your reuse is governed by the Creative Commons Attribution 4.0 License http://creativecommons.org/licenses/by/4.0/
 }
 
 unit Summer.Strings;
@@ -17,12 +18,13 @@ type
     function ReplaceTAG(TagBegin, TagEnd, ReplaceBy: string): string;
     function GetTAGValue(TagBegin, TagEnd: string): string;
 
-    /// <summary>
-    ///  several methods to self wrap
-    /// </summary>
+    /// <summary> returns '(' + self + ')' </summary>
     function WrapParentheses: string;
+    /// <summary> returns '[' + self + ']' </summary>
     function WrapSqrBrackets: string;
+    /// <summary> returns '<' + self + '>' </summary>
     function WrapAngleBrackets: string;
+    /// <summary> returns '{' + self + '}' </summary>
     function WrapBraces: string;
   end;
 
