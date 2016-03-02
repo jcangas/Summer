@@ -23,6 +23,7 @@ type
     function GetChild(const Name: string): IJSONProperties; virtual;
     procedure SetValue(const Name: string; const Value: TValue); virtual;
     function GetFileName: string;
+    function CreateChild(Values: TJSONObject; const OwnValues: Boolean): TJSONProperties;virtual;
     constructor Create(Values: TJSONObject; const OwnValues: Boolean);overload;
   public
     constructor Create;overload;
@@ -45,6 +46,7 @@ type
     property AsObject: TJSONObject read GetAsObject write SetAsObject;
     property FileName: string read GetFileName;
     property Count: Integer read GetCount;
+    function Contains(const Name: string): Boolean;
     property Pairs[const Index: Integer]: TJSONPair read GetPair;
     property Values[const Name: string]: TValue read GetValue write SetValue;default;
     property Childs[const Name: string]: IJSONProperties read GetChild;
@@ -94,7 +96,7 @@ end;
 
 function TJSONProperties.Clone: IJSONProperties;
 begin
-  Result := TJSONProperties.Create(FJSONObject.Clone as TJSONObject, True);
+  Result := CreateChild(FJSONObject.Clone as TJSONObject, True);
 end;
 
 function TJSONProperties.GetCount: Integer;
@@ -117,12 +119,18 @@ begin
   Result := FJSONObject.Pairs[Index];
 end;
 
+function TJSONProperties.CreateChild(Values: TJSONObject;
+  const OwnValues: Boolean): TJSONProperties;
+begin
+  Result := TJSONProperties.Create(Values, False);
+end;
+
 function TJSONProperties.GetChild(const Name: string): IJSONProperties;
 var
   JSONValue: TJSONObject;
 begin
   if FJSONObject.TryGetValue<TJSONObject>(Name, JSONValue) then
-    Result := TJSONProperties.Create(JSONValue, False)
+    Result := CreateChild(JSONValue, False)
   else
     Result := nil;
 end;
@@ -135,6 +143,13 @@ begin
     Result := TValue.FromJSON(JSONValue)
   else
     Result := nil;
+end;
+
+type
+  TJSONValueHack = class(TJSONValue);
+function TJSONProperties.Contains(const Name: string): Boolean;
+begin
+  Result := TJSONValueHack(FJSONObject).FindValue(Name) <> nil;
 end;
 
 function DeepChild(Obj: TJSONObject; var Path: TArray<string>): TJSONObject;
@@ -184,14 +199,14 @@ end;
 
 procedure TJSONProperties.LoadFromStream(const AStream: TStream);
 var
-  strStream : TStringStream;
+  Stream : TStringStream;
 begin
-  strStream := TStringStream.Create;
+  Stream := TStringStream.Create;
   try
-    strStream.LoadFromStream(AStream);
-    AsJSON := strStream.DataString;
+    Stream.LoadFromStream(AStream);
+    AsJSON := Stream.DataString;
   finally
-    strStream.Free;
+    Stream.Free;
   end;
 end;
 

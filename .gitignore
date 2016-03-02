@@ -21,6 +21,7 @@ Thumbs.db
 *.local
 *.identcache
 __history
+__recovery
 *.tvsconfig
 *.dsk
 ModelSupport_*

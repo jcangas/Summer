@@ -12,19 +12,22 @@ uses
   Summer.JSONProperties;
 
 type
-  TConfiguration = class(TJSONProperties, IConfiguration)
+  TConfiguration = class(TJSONProperties, IJSONProperties, IConfiguration)
   strict private
     FDefaults: IConfiguration;
   private
   protected
+    function CreateChild(Values: TJSONObject; const OwnValues: Boolean): TJSONProperties;override;
     function GetChild(const Name: string): IJSONProperties; override;
     function GetValue(const Name: string): TValue; override;
     function GetDefaults: IConfiguration;
     procedure SetDefaults(Value: IConfiguration);
-
+    function IConfiguration.GetChild = GetChildAsIConfiguration;
+    function GetChildAsIConfiguration(const Name: string): IConfiguration;
   public
     function Clone : IConfiguration; overload;
     property Defaults: IConfiguration read GetDefaults write SetDefaults;
+    property Childs[const Name: string]: IConfiguration read GetChildAsIConfiguration;
   end;
 
 implementation
@@ -39,7 +42,18 @@ end;
 
 function TConfiguration.Clone: IConfiguration;
 begin
-  Result := TConfiguration.Create(AsObject.Clone as TJSONObject, True);
+  Result := inherited Clone as IConfiguration;
+end;
+
+function TConfiguration.CreateChild(Values: TJSONObject;
+  const OwnValues: Boolean): TJSONProperties;
+begin
+  Result := TConfiguration.Create(Values, OwnValues);
+end;
+
+function TConfiguration.GetChildAsIConfiguration(const Name: string): IConfiguration;
+begin
+  Result := GetChild(Name) as IConfiguration;
 end;
 
 function TConfiguration.GetChild(const Name: string): IJSONProperties;

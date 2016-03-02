@@ -5,7 +5,7 @@ Give some superpowers to your Delphi code
 :encoding: utf-8
 :lang: en
 :!numbered:
- 
+
 http://jcangas.github.io/SummerFW4D[]
 
 == Summer? WTF!?
