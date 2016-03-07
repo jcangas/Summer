@@ -84,6 +84,8 @@ procedure TMyConfigurableService.Create(Config: IConfiguration);
 begin
   inherited;
     ...
+  // Isolating configuration in a method allow
+  // use it on demand or when the object is created.
   Setup(Config)
 end
 
