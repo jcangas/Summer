@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{E8F12369-6D99-4E8A-8165-268C73A13998}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="..\..\src\D230-X10\Summer.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="SummerTest.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Summer">
+        <MSBuild Projects="..\..\src\D230-X10\Summer.dproj"/>
+    </Target>
+    <Target Name="Summer:Clean">
+        <MSBuild Projects="..\..\src\D230-X10\Summer.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Summer:Make">
+        <MSBuild Projects="..\..\src\D230-X10\Summer.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="SummerTest">
+        <MSBuild Projects="SummerTest.dproj"/>
+    </Target>
+    <Target Name="SummerTest:Clean">
+        <MSBuild Projects="SummerTest.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SummerTest:Make">
+        <MSBuild Projects="SummerTest.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Summer;SummerTest"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Summer:Clean;SummerTest:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Summer:Make;SummerTest:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
