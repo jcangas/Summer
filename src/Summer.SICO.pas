@@ -150,7 +150,7 @@ type
     function Construct(Args: TArray<TValue>): TDIRule<T>; overload;
   end;
 
-  /// Colección de todas las reglas conocidas por el SICO
+  /// Colección de todas las reglas conocidas por SICO
   TDIRules = TObjectDictionary<PTypeInfo, TServiceRules>;
 
   /// Un contenedor para injección de dependencias
@@ -319,7 +319,7 @@ destructor TDIRule.Destroy;
 var
   Intf: IInterface;
 begin
-  // workaround for compiler bug: FBuilder is not released !
+  // workaround for XE compiler bug: FBuilder is not released !
   TFunc<TObject>(FBuildStrategy) := nil;
   TFunc<TObject>(FByNameStrategy) := nil;
   if IsSingleton then begin

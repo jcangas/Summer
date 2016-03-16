@@ -1,0 +1,12 @@
+= SICO To Do
+:source-highlighter: highlightjs
+
+== Nuevas funciones
+
+* Función ThreadSingleton
+* AsDefault: ahora toma siempre el nombre '' como Default -> posibilidad de indicar explicitamente que implmentación
+se actva por defecto.
+
+* PropertyInjection: Ahora solo tiene constructor injection
+
+* Reglas mediante attributos [Inject()]
