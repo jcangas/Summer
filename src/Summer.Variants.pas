@@ -27,7 +27,7 @@ uses
   System.Variants,
   Summer.DateTime;
 
-{ VariantHelper }
+  { VariantHelper }
 
 function VariantHelper.ToDate(Def: TDate): TDate;
 begin

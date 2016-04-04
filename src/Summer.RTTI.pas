@@ -20,12 +20,17 @@ uses
 
 {$SCOPEDENUMS ON}
 
+
 type
   /// <summary>
   /// Soporte para detectar NullableTypes a traves de TTypeInfo
   /// </summary>
   TTypeInfoHelper = record helper for TTypeInfo
     function IsNullableType: Boolean;
+    function NullableBaseType: PTypeInfo;
+    function IsPlainType: Boolean;
+    function IsCollectionType: Boolean;
+    function IsReferenceType: Boolean;
   end;
 
   /// <summary>
@@ -40,7 +45,7 @@ type
     /// </summary>
     function IsPlainType: Boolean;
     /// <summary>
-    /// un tipo "Lista de X"
+    /// Es un tipo "Lista de X" ?
     /// </summary>
     function IsCollectionType: Boolean;
     /// <summary>
@@ -54,7 +59,7 @@ type
   /// identificación de tipos y conversión entre tipos
   /// </summary>
   TValueHelper = record helper for TValue
-  strict private
+  private
     class function JSONToArray(const AArray: TJSONArray): TValue; static;
 
   public
@@ -76,7 +81,8 @@ type
     /// Soporte para Nullables: devuelve el TValue contenido en el Nullable o TValue.Empty si
     /// el Nullable es vacio. La función retorna Self.IsNullable
     /// </summary>
-    function TryGetNullable(out Value: TValue): Boolean;
+    function TryGetNullable(var Value: TValue): Boolean;
+    function GetNullable: TValue;
     /// <summary>
     /// Soporte para Nullables. Self debe ser Nullable o se produce excepcion.
     /// Asigna Value a Self usando RTTI, tomando en cuenta que Value puede ser nil.
@@ -152,14 +158,12 @@ type
     /// entre Item y property es por nombre. Es decir, en esencia lo que hace es
     /// Target.xxx := Source.ItemOf['xxx'].Value;
     /// </summary>
-    class procedure InjectProps(Target: TObject; Source: TObject); overload;
-    class procedure InjectProps(Target: TObject; Source: TObject; Names: array of string); overload;
+    class procedure InjectProps(Target: TObject; Source: TObject);overload;
+    class procedure InjectProps(Target: TObject; Source: TObject; Names: array of string);overload;
   end;
 
   TValuesInjector = class(TPropertiesInjector)
   end deprecated 'use TPropertiesInjector';
-
-
 
   /// <summary>
   /// Busqueda de métodos mediante RTTI usando un criterio de votación
@@ -174,6 +178,7 @@ type
     class operator Implicit(AInteger: Integer): TVote;
     class operator Implicit(AVote: TVote): Integer;
   end;
+
   TVoteFunc = Reference to function(const Method: TRttiMethod): TVote;
   TMethodKinds = set of TMethodKind;
 
@@ -481,7 +486,7 @@ begin
   end;
 end;
 
-function TValueHelper.TryGetNullable(out Value: TValue): Boolean;
+function TValueHelper.TryGetNullable(var Value: TValue): Boolean;
 var
   RContext: TRttiContext;
   RType: TRttiType;
@@ -490,18 +495,31 @@ var
 begin
   Result := IsNullable;
   if not Result then
+  begin
+    Value := Self;
     Exit;
+  end;
 
-  Instance := GetReferenceToRawData;
-  RType := RContext.GetType(TypeInfo);
-  RField := RType.GetField('FValue');
-  if not Assigned(RField) then
-    raise Exception.Create('FValue field not found in TNullable');
-
-  if Instance.IsNull then
+  if Self.IsEmpty then
     Value := nil
   else
-    Value := RField.GetValue(Instance);
+  begin
+    Instance := GetReferenceToRawData;
+    RType := RContext.GetType(TypeInfo);
+    RField := RType.GetField('FValue');
+    if not Assigned(RField) then
+      raise Exception.Create('FValue field not found in TNullable');
+
+    if Instance.HasValue then
+      Value := RField.GetValue(Instance)
+    else
+      Value := nil;
+  end;
+end;
+
+function TValueHelper.GetNullable: TValue;
+begin
+  TryGetNullable(Result);
 end;
 
 function TValueHelper.IsNullable: Boolean;
@@ -550,20 +568,19 @@ begin
     Exit;
   RTTarget := RC.GetType(Target.ClassType) as TRttiInstanceType;
   RTSource := RC.GetType(Source.ClassType) as TRttiInstanceType;
+
   PropSource := nil;
   try
     for PropSource in RTSource.GetProperties do begin
       if PropSource.PropertyType.IsInstance then
         Continue;
-      if (Length(Names) > 0) and (IndexText(PropSource.Name, Names) = -1) then
-        Continue;
+      if (Length(Names) > 0) and (IndexText(PropSource.Name, Names) = -1) then Continue;
       PropTarget := RTTarget.GetProperty(PropSource.Name) as TRttiInstanceProperty;
       if Assigned(PropTarget) and PropTarget.IsWritable then
         PropTarget.SetValue(Target, PropSource.GetValue(Source));
     end;
   except
-    raise Exception.CreateFmt('Error on inject %s.%s = %s from %s',
-      [RTTarget.Name, PropSource.Name, PropSource.GetValue(Source).ToString, RTSource.Name]);
+    raise Exception.CreateFmt('Error on inject %s.%s = %s from %s', [RTTarget.Name, PropSource.Name, PropSource.GetValue(Source).ToString, RTSource.Name]);
   end;
 end;
 
@@ -823,7 +840,29 @@ end;
 
 function TTypeInfoHelper.IsNullableType: Boolean;
 begin
-  Result := GetTypeName(@Self).Contains('TNullable');
+  Result := TNullable.IsNullableType(@Self);
+end;
+
+function TTypeInfoHelper.NullableBaseType: PTypeInfo;
+begin
+  Result := TNullable.BaseTypeInfo(@Self);
+end;
+
+function TTypeInfoHelper.IsPlainType: Boolean;
+begin
+  Result := (Kind in [tkInteger, tkChar, tkEnumeration, tkFloat,
+    tkString, tkSet, tkWChar, tkLString, tkWString,
+    tkVariant, tkInt64, tkUString]) or IsNullableType;
+end;
+
+function TTypeInfoHelper.IsCollectionType: Boolean;
+begin
+  Result := (Kind = tkClass) and TypeData.ClassType.IsObjList;
+end;
+
+function TTypeInfoHelper.IsReferenceType: Boolean;
+begin
+  Result := (Kind = tkClass) and not IsCollectionType;
 end;
 
 { TRttiTypeHelper }
@@ -835,22 +874,17 @@ end;
 
 function TRttiTypeHelper.IsPlainType: Boolean;
 begin
-  Result := not(Self is TRttiStructuredType) or IsNullableType;
+  Result := Self.Handle.IsPlainType;
+end;
+
+function TRttiTypeHelper.IsCollectionType: Boolean;
+begin
+  Result := Self.Handle.IsCollectionType
 end;
 
 function TRttiTypeHelper.IsReferenceType: Boolean;
 begin
-  Result := not IsPlainType and not IsCollectionType;
-end;
-
-function TRttiTypeHelper.IsCollectionType: Boolean;
-var
-  Klass: TClass;
-begin
-  if not IsInstance then
-    Exit(False);
-  Klass := AsInstance.MetaclassType;
-  Result := Klass.IsObjList;
+  Result := Self.Handle.IsReferenceType;
 end;
 
 { TGroupCollectionHelper }
