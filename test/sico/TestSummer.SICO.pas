@@ -97,7 +97,7 @@ begin
   AND_.I_locate_the_service(Service2);
 
   THEN_.Implmentors_are_not_same(Service1, Service2);
-  THEN_.Implmentor_count_is(2);
+  ALSO_.Implmentor_count_is(2);
 end;
 
 procedure TestSICOBasic.TestCreateAndFreeInstanceCount;

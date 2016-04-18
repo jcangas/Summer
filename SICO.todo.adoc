@@ -1,5 +1,6 @@
 = SICO To Do
 :source-highlighter: highlightjs
+:nofooter:
 
 == Nuevas funciones
 

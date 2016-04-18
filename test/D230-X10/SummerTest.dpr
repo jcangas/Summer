@@ -11,8 +11,8 @@ uses
   DUnitX.Loggers.Console,
   DUnitX.Loggers.Xml.NUnit,
   DUnitX.TestFramework,
-  TestSummer.SICO in '..\TestSummer.SICO.pas',
-  TestSummer.SICO.Steps in '..\TestSummer.SICO.Steps.pas';
+  TestSummer.SICO in '..\sico\TestSummer.SICO.pas',
+  TestSummer.SICO.Steps in '..\sico\steps\TestSummer.SICO.Steps.pas';
 
 var
   runner : ITestRunner;

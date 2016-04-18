@@ -45,4 +45,18 @@
         <CallTarget Targets="Summer:Make;SummerTest:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='All'">
+        <BuildGroupProject Include="SummerTest.dproj">
+            <ProjectGuid>{DE23FF2E-5B4E-45CB-BCF0-72644E2B5BA2}</ProjectGuid>
+            <Configurations>Test</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\..\src\D230-X10\Summer.dproj">
+            <ProjectGuid>{C153B219-4473-4085-B8E7-9E03D606FE86}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
 </Project>

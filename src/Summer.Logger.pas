@@ -19,6 +19,7 @@ uses
   Summer.ILogger;
 
 type
+{$REGION 'ILogger implmentation'}
   TLogger = class(TInterfacedObject, ILogger)
   public type
     Childs = TDictionary<string, ILogger>;
@@ -82,15 +83,19 @@ type
     property Additivity: Boolean read GetAdditivity write SetAdditivity;
     property IsRoot: Boolean read GetIsRoot;
   end;
+{$ENDREGION}
 
 {$REGION 'Abstract Writers'}
 
+ /// Clase abstracta para implmentar writers que transforman el Evento en un texto
+ /// Transforma el Evento en un Texto usando su formateador y delega en DoWriteText;
   TWriteTextLogWriter = class(TLog.Writer)
   protected
     procedure DoWriteText(Text: string); virtual; abstract;
     procedure DoWriteEvent(Event: TLog.Event); override;
   end;
 
+  /// Log writer que delega en una closure
   TTextWriterProc = TProc<string>;
   TTextProcLogWriter = class(TWriteTextLogWriter)
   private
@@ -105,6 +110,9 @@ type
 
 {$ENDREGION}
 
+  /// Opciones para stream writers
+  /// swoCloseOnWrite: el stream se abre y cierra en cada escritura para poder compartir ficheros.
+  /// swoConsumerThread: el Writer usa encola los eventos y usa un thread para ir escribiendo.
   TStreamWriterOption = (swoCloseOnWrite, swoConsumerThread);
   TStreamWriterOptions = set of TStreamWriterOption;
   TWriterQueue = class
@@ -124,6 +132,7 @@ type
     procedure Execute(Arg: string);
   end;
 
+  /// Log writer que escribe un fichero de texto
   TTextFileLogWriter = class(TWriteTextLogWriter)
   private
     FFilename: string;
@@ -149,6 +158,7 @@ type
     property Stream: TFileStream read FStream;
   end;
 
+  /// Log writer que escribe en un TStrings
   TStringsLogWriter = class(TWriteTextLogWriter)
   private
     FStrings: TStrings;
@@ -160,12 +170,15 @@ type
       FormatterClass: TLog.FormatterClass = nil);
   end;
 
+  /// Log writer que escribe en la salida estandar de la consola de sistema
   TConsoleLogWriter = class(TWriteTextLogWriter)
   protected
     procedure DoWriteText(Text: string); override;
   public
   end;
 
+  /// Log writer que delega en TDebugger.Output(), a fin de
+  /// escribir en la consola de debgu del sistema
   TOutputDebugLogWriter = class(TWriteTextLogWriter)
   protected
     procedure DoWriteText(Text: string); override;
@@ -174,6 +187,7 @@ type
 
 {$IFDEF MSWINDOWS}
 
+  /// Log writer que envia a la cola de eventos del sistema Windows
   TWindowsEventLogWriter = class(TLog.Writer)
   private
     FEventLogHandle: THandle;
@@ -191,6 +205,7 @@ type
 
 {$ENDIF}
 
+/// Get the root logger
 function Logger: ILogger;
 
 implementation
@@ -470,8 +485,8 @@ begin
       FStrings.Add(Text);
       if (FCapacity > 0) then begin
         FStrings.BeginUpdate;
+        /// using clear fools TMemo control (it is a TMemo bug)
         while (FCapacity < FStrings.Count) do begin
-          //FStrings.Clear; // Fix-ZAVA
           FStrings.Delete(0);
         end;
         FStrings.EndUpdate;

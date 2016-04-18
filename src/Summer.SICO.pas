@@ -7,12 +7,11 @@
 
 /// <summary>
 /// SICO Implementa un Dependency Injection Container https://en.wikipedia.org/wiki/Dependency_injection
-/// SICO es acrónimo de Simple Injection COntainer. La aparición del término simple,
+/// SICO es acrónimo de Simple Injection Container. La aparición del término simple,
 /// está motivada porque se ha buscado una implmentación simple combinando
 /// los patrones Fluent Interface (https://en.wikipedia.org/wiki/Fluent_interface) y
 /// Strategy (https://en.wikipedia.org/wiki/Strategy_pattern).
 /// </summary>
-
 unit Summer.SICO;
 
 interface
@@ -49,11 +48,10 @@ type
   /// Singleton: Solo hay una unica instancia del Implmentor y cada vez
   /// que se solicita la dependencia, se retorna dicha instancia.
   /// El Singleton se destruye al ser destruido la instancia de SICO
-  /// ThreadSingleton. ** No implmentado aún**. te caso SICO, mantiente un Singleton
+  /// ThreadSingleton. **No implmentado aún**. En este caso SICO, mantiente un Singleton
   /// para cada thread que solicita la dependencia.
   /// En otro caso, SICO fabrica una instancia cada vez que se solicita la dependencia.
   /// </summary>
-
   TDIRule = class(TObject)
   private
     class var FRTTIContext: TRTTIContext;
@@ -133,7 +131,7 @@ type
   end;
 
   /// Clase genérica para facilitar la creacicón de Reglas para un tipo dado
-  /// T representa el Implmentor Type
+  /// T representa el Implementor Type
   /// Notar que las instancias de esta clase se crean mediante el meétodo factoria
   /// "Returns" de la clase TDIContainer
   ///
