@@ -29,10 +29,8 @@ type
     Formatter = class;
     Level = TOpenEnum;
 
-    /// <summary>
-    /// Un Evento de Log
-    /// Los valores de TimeStamp, ThreadID son rellenados automaticamente.
-    /// </summary>
+    /// <summary>Un Evento de Log.
+    /// Los valores de TimeStamp, ThreadID son rellenados automaticamente. </summary>
     Event = record
     public
       TimeStamp: TDateTime;

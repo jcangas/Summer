@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{C153B219-4473-4085-B8E7-9E03D606FE86}</ProjectGuid>
-        <MainSource>Summer.dpk</MainSource>
+        <ProjectGuid>{2050B354-93DD-4642-B752-49C6B350941C}</ProjectGuid>
+        <MainSource>Summer.Win.dpk</MainSource>
         <ProjectVersion>18.0</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
@@ -146,7 +146,7 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <GenDll>true</GenDll>
-        <SanitizedProjectName>Summer</SanitizedProjectName>
+        <SanitizedProjectName>Summer_Win</SanitizedProjectName>
         <DllSuffix>D230</DllSuffix>
         <VerInfo_Locale>3082</VerInfo_Locale>
         <GenPackage>true</GenPackage>
@@ -302,82 +302,62 @@
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="dbrtl.dcp"/>
-        <DCCReference Include="..\Summer.CLI.pas"/>
-        <DCCReference Include="..\Summer.Config.pas"/>
-        <DCCReference Include="..\Summer.DuckIntf.pas"/>
-        <DCCReference Include="..\Summer.IConfig.pas"/>
-        <DCCReference Include="..\Summer.ILogger.pas"/>
-        <DCCReference Include="..\Summer.Logger.pas"/>
-        <DCCReference Include="..\Summer.SICO.pas"/>
-        <DCCReference Include="..\Summer.StdPaths.pas"/>
-        <DCCReference Include="..\Summer.Utils.pas"/>
-        <DCCReference Include="..\Summer.JSON.pas"/>
-        <DCCReference Include="..\Summer.RTTI.pas"/>
-        <DCCReference Include="..\Summer.IEncryption.pas"/>
-        <DCCReference Include="..\Summer.DateTime.pas"/>
-        <DCCReference Include="..\Summer.Enum.pas"/>
-        <DCCReference Include="..\Summer.Strings.pas"/>
-        <DCCReference Include="..\Summer.DataSet.pas"/>
-        <DCCReference Include="..\Summer.Nullable.pas"/>
-        <DCCReference Include="..\Summer.Queryable.pas"/>
-        <DCCReference Include="..\Summer.Encryption.pas"/>
-        <DCCReference Include="..\Summer.IJSONProperties.pas"/>
-        <DCCReference Include="..\Summer.JSONProperties.pas"/>
-        <DCCReference Include="..\Summer.Variants.pas"/>
-        <None Include="ModelSupport_Summer\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Enum\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\DateTime\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Enum\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Config\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\CLI\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Encryption\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\StdPaths\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Queryable\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\JSON\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Utils\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\IEncryption\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\SICO\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Variants\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\DataSet\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Strings\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\RTTI\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Logger\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\IConfig\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\JSONProperties\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Nullable\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\ILogger\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Win\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\IJSONProperties\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\DuckIntf\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Win\ISvcCtrl\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\Win\SvcCtrl\default.txvpck"/>
-        <None Include="ModelSupport_Summer\Summer\IJSONProperties\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\ILogger\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Logger\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\CLI\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Win\ISvcCtrl\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\DataSet\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Win\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\StdPaths\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\SICO\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\JSON\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Config\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Win\SvcCtrl\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\IConfig\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Utils\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Strings\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\RTTI\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\JSONProperties\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Encryption\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\DateTime\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\IEncryption\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Nullable\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Variants\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\DuckIntf\default.txaPackage"/>
-        <None Include="ModelSupport_Summer\Summer\Queryable\default.txaPackage"/>
+        <DCCReference Include="..\Summer.Win.ISvcCtrl.pas"/>
+        <DCCReference Include="..\Summer.Win.SvcCtrl.pas"/>
+        <None Include="ModelSupport_Summer.Win\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Win\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Win\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Win\SvcCtrl\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Win\SvcCtrl\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Win\ISvcCtrl\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Win\ISvcCtrl\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Variants\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Variants\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Utils\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Utils\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Strings\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Strings\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\StdPaths\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\StdPaths\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\SICO\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\SICO\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\RTTI\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\RTTI\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Queryable\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Queryable\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Nullable\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Nullable\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Logger\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Logger\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\JSONProperties\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\JSONProperties\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\JSON\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\JSON\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\ILogger\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\ILogger\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\IJSONProperties\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\IJSONProperties\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\IEncryption\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\IEncryption\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\IConfig\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\IConfig\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Enum\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Enum\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Encryption\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Encryption\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\DuckIntf\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\DuckIntf\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\DateTime\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\DateTime\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\DataSet\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\DataSet\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Config\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\Config\default.txvpck"/>
+        <None Include="ModelSupport_Summer.Win\Summer\CLI\default.txaPackage"/>
+        <None Include="ModelSupport_Summer.Win\Summer\CLI\default.txvpck"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -397,7 +377,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">Summer.dpk</Source>
+                    <Source Name="MainSource">Summer.Win.dpk</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\bcboffice2k230.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
@@ -472,21 +452,21 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\out\D230\Win32\Debug\bin\SummerD230.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\out\D230\Win32\Debug\bin\Summer.WinD230.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>Summer.bpl</RemoteName>
+                        <RemoteName>Summer_Win.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\out\D210\Win32\Debug\bin\Summer.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\..\out\D210\Win32\Debug\bin\Summer_Win.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>Summer.bpl</RemoteName>
+                        <RemoteName>Summer_Win.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\..\out\D210\Win32\Debug\bin\Summer.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\..\..\out\D210\Win32\Debug\bin\Summer_Win.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>Summer.bpl</RemoteName>
+                        <RemoteName>Summer_Win.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

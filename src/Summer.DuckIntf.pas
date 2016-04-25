@@ -13,6 +13,11 @@ uses
   System.RTTI;
 
 type
+  /// <summary> Delegación dinámica de una interface.
+  /// Busca si un método esta implementado en un objeto delegado; si lo encuentra
+  ///  invoca esa implementación, en caso contrario se invoca MethodMissing.
+  ///  Si no especificamos objeto delegado, se delega en Self.
+  /// </summary>
   TDuckInterface = class(TVirtualInterface)
   strict private
     class var FContext: TRTTIContext;

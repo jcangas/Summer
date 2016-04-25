@@ -14,6 +14,11 @@ uses
   Summer.Win.ISvcCtrl;
 
 type
+  /// Implementacion del API de control de servicio.
+  /// El status se consulta a traves de la API de Windows.
+  ///  El resto de operaciones se delegan en la consola sc.exe
+  ///  invocando la consola de windows con elevación de permisos
+  ///  mediante la opcion "runas".
   TWinServiceControl = class(TInterfacedObject, IWinServiceControl)
   strict private
     FServiceExePath: string;

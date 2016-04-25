@@ -28,6 +28,9 @@ type
     class function ToString(const Status: Cardinal): string;reintroduce;
   end;
 
+  /// Interface para abstraer un servicio Windows. Notar que en esta unit no se referencia
+  ///  Windows directamente. Con esta interfaz se pretende abstraer el control del ciclo de vida
+  /// de un servicio arbitrario, al tiempo que se facilita su integración en SICO.
   IWinServiceControl = interface
     ['{B4F5E2DC-6714-42F5-9CE5-1F92FEA5D8DE}']
     function GetStatus: Cardinal;

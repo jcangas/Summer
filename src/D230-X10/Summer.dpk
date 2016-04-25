@@ -32,7 +32,7 @@ package Summer;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$LIBSUFFIX 'D210'}
+{$LIBSUFFIX 'D230'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
@@ -46,12 +46,10 @@ contains
   Summer.DuckIntf in '..\Summer.DuckIntf.pas',
   Summer.IConfig in '..\Summer.IConfig.pas',
   Summer.ILogger in '..\Summer.ILogger.pas',
-  Summer.Win.ISvcCtrl in '..\Summer.Win.ISvcCtrl.pas',
   Summer.Logger in '..\Summer.Logger.pas',
   Summer.SICO in '..\Summer.SICO.pas',
   Summer.StdPaths in '..\Summer.StdPaths.pas',
   Summer.Utils in '..\Summer.Utils.pas',
-  Summer.Win.SvcCtrl in '..\Summer.Win.SvcCtrl.pas',
   Summer.JSON in '..\Summer.JSON.pas',
   Summer.RTTI in '..\Summer.RTTI.pas',
   Summer.IEncryption in '..\Summer.IEncryption.pas',

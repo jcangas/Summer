@@ -14,14 +14,24 @@ uses
   System.TypInfo;
 
 type
+{$M+}
   PNullable = ^TNullable;
 
+  /// <summary> Tipo para manipular un Nullable asbtracto, simulando
+  ///  herencia con records. Los nullables concretos "extienden" este tipo
+  /// Ver TNullable<T>
+  ///  </summary>
   TNullable = record
   strict private
     FHasValue: Boolean;
+    class var FNullableTypes: array of PTypeInfo;
+    class var FNullableBaseTypes: array of PTypeInfo;
   private
     constructor Create(const HasValue: Boolean);
+    class procedure RegisterNullableType(ATypeInfo: PTypeInfo; ABaseTypeInfo: PTypeInfo); static;
+    class function IndexOfNullableType(ATypeInfo: PTypeInfo): Integer; static;
   public
+    class constructor Create;
     class function IsNullableType(ATypeInfo: PTypeInfo): Boolean; static;
     class function BaseTypeInfo(ATypeInfo: PTypeInfo): PTypeInfo; static;
     function IsNull: Boolean;
@@ -29,6 +39,9 @@ type
     class function Null: TValue; static; inline;
   end;
 
+  /// <summary> Tipo genérico para crear Nullables concretos. Para simular
+  ///  herencia, notar que el **primer** campo es TNullable
+  /// </summary>
   TNullable<T> = record
   private
     FNullable: TNullable;
@@ -36,23 +49,41 @@ type
     function GetValue: T;
     class var FNull: ^TNullable<T>;
   public
+  /// <summary> Devuelve el valor Null para este TNullable<T>
+  /// </summary>
     class function Null: TNullable<T>; static; inline;
+  /// <summary> Inicializa el valor Null de este TNullable<T>
+  /// </summary>
     class constructor Create;
+
     constructor Create(const AValue: T);
+  /// <summary> Devuelve el valor T contenido en el nullable.
+  ///  Levanta exception si es null
+  /// </summary>
     property Value: T read GetValue;
     function IsNull: Boolean; inline;
+
+  /// <summary> Retorna TypeInfo(T)
+  /// </summary>
     class function BaseTypeInfo: PTypeInfo; static;
+
     class operator NotEqual(ALeft, ARight: TNullable<T>): Boolean;
     class operator Equal(ALeft, ARight: TNullable<T>): Boolean;
-
     class operator Implicit(const Value: T): TNullable<T>;
     class operator Implicit(const Value: TValue): TNullable<T>;
     class operator Implicit(const Value: TNullable<T>): T;
     class operator Implicit(const Value: TNullable<T>): TValue;
   end;
 
+{$REGION 'Tipos nullables predefinidos'}
   PNullableString = ^TNullableString;
   TNullableString = TNullable<string>;
+
+  PNullableByte = ^TNullableByte;
+  TNullableByte = TNullable<Byte>;
+
+  PNullableWord = ^TNullableWord;
+  TNullableWord = TNullable<Word>;
 
   PNullableInteger = ^TNullableInteger;
   TNullableInteger = TNullable<Integer>;
@@ -77,6 +108,12 @@ type
 
   PNullableExtended = ^TNullableExtended;
   TNullableExtended = TNullable<Extended>;
+{$ENDREGION}
+
+{$M-}
+
+resourcestring
+  CannotConvertNull = 'TNullable: cannot convert null to %s';
 
 implementation
 
@@ -84,6 +121,59 @@ uses
   System.Generics.Defaults,
   System.SysUtils,
   Summer.Rtti;
+
+{ TNullable }
+
+class constructor TNullable.Create;
+begin
+  SetLength(FNullableTypes, 0);
+  SetLength(FNullableBaseTypes, 0);
+end;
+
+class procedure TNullable.RegisterNullableType(ATypeInfo: PTypeInfo; ABaseTypeInfo: PTypeInfo);
+begin
+  FNullableTypes := FNullableTypes + [ATypeInfo];
+  FNullableBaseTypes := FNullableBaseTypes + [ABaseTypeInfo];
+end;
+
+class function TNullable.IndexOfNullableType(ATypeInfo: PTypeInfo): Integer;
+var
+  idx: Integer;
+begin
+  for idx := 0 to High(FNullableTypes) do
+    if FNullableTypes[idx] = ATypeInfo then
+      Exit(idx);
+  Result := -1;
+end;
+
+class function TNullable.IsNullableType(ATypeInfo: PTypeInfo): Boolean;
+begin
+  Result := IndexOfNullableType(ATypeInfo) > -1;
+end;
+
+class function TNullable.Null: TValue;
+begin
+  Result := TValue.Empty;
+end;
+
+class function TNullable.BaseTypeInfo(ATypeInfo: PTypeInfo): PTypeInfo;
+var
+  idx: Integer;
+begin
+  idx := IndexOfNullableType(ATypeInfo);
+  if idx = -1 then Exit(ATypeInfo);
+  Result := FNullableBaseTypes[idx];
+end;
+
+constructor TNullable.Create(const HasValue: Boolean);
+begin
+  FHasValue := HasValue;
+end;
+
+function TNullable.IsNull: Boolean;
+begin
+  Result := not FHasValue;
+end;
 
 { TNullable<T> }
 
@@ -95,6 +185,7 @@ end;
 
 class constructor TNullable<T>.Create;
 begin
+  TNullable.RegisterNullableType(System.TypeInfo(TNullable<T>), System.TypeInfo(T));
   New(FNull);
 end;
 
@@ -128,7 +219,7 @@ end;
 function TNullable<T>.GetValue: T;
 begin
   if IsNull then
-    raise Exception.CreateFmt('Invalid operation, TNullable<%s> is null', [GetTypeName(TypeInfo(T))]);
+    raise Exception.CreateFmt(CannotConvertNull, [GetTypeName(TypeInfo(T))]);
   Result := FValue;
 end;
 
@@ -164,58 +255,9 @@ begin
   Result := FNullable.IsNull;
 end;
 
-{ TNullable }
-
-constructor TNullable.Create(const HasValue: Boolean);
-begin
-  FHasValue := HasValue;
-end;
-
-class function TNullable.BaseTypeInfo(ATypeInfo: PTypeInfo): PTypeInfo;
-begin
-  if (ATypeInfo = TypeInfo(TNullableString)) then
-    Result := TNullableString.BaseTypeInfo
-  else if (ATypeInfo = TypeInfo(TNullableInteger)) then
-    Result := TNullableInteger.BaseTypeInfo
-  else if (ATypeInfo = TypeInfo(TNullableBoolean)) then
-    Result := TNullableBoolean.BaseTypeInfo
-  else if (ATypeInfo = TypeInfo(TNullableDate)) then
-    Result := TNullableDate.BaseTypeInfo
-  else if (ATypeInfo = TypeInfo(TNullableTime)) then
-    Result := TNullableTime.BaseTypeInfo
-  else if (ATypeInfo = TypeInfo(TNullableDateTime)) then
-    Result := TNullableDateTime.BaseTypeInfo
-  else if (ATypeInfo = TypeInfo(TNullableDouble)) then
-    Result := TNullableDouble.BaseTypeInfo
-  else if (ATypeInfo = TypeInfo(TNullableCurrency)) then
-    Result := TNullableCurrency.BaseTypeInfo
-  else if (ATypeInfo = TypeInfo(TNullableExtended)) then
-    Result := TNullableExtended.BaseTypeInfo
-  else
-    Result := ATypeInfo;
-end;
-
-function TNullable.IsNull: Boolean;
-begin
-  Result := not FHasValue;
-end;
-
-class function TNullable.IsNullableType(ATypeInfo: PTypeInfo): Boolean;
-begin
-  Result := (ATypeInfo = TypeInfo(TNullableString))
-    or (ATypeInfo = TypeInfo(TNullableInteger))
-    or (ATypeInfo = TypeInfo(TNullableBoolean))
-    or (ATypeInfo = TypeInfo(TNullableDate))
-    or (ATypeInfo = TypeInfo(TNullableTime))
-    or (ATypeInfo = TypeInfo(TNullableDateTime))
-    or (ATypeInfo = TypeInfo(TNullableDouble))
-    or (ATypeInfo = TypeInfo(TNullableCurrency))
-    or (ATypeInfo = TypeInfo(TNullableExtended));
-end;
-
-class function TNullable.Null: TValue;
-begin
-  Result := TValue.Empty;
-end;
-
 end.
+
+
+
+
+

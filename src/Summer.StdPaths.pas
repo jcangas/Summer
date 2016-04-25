@@ -15,15 +15,27 @@ uses
   Summer.DuckIntf;
 
 type
+  /// <summary> API Para manejo de Paths estandar.
+  /// Los paths se introducen con el separador / y se convierten
+  /// al separador de la plataforma al ser usados. </summary>
   IStandardPaths = interface(IInvokable)
     ['{227DF8F5-E517-4611-89E7-A850D515CA80}']
-    function ExeFileName(const NewExtension: string = '*'): string;
+  /// <summary> Devuelve el Path completo del ejecutable. Opcionalmente con la
+  /// extension cambiada. </summary>
     function FullExeName(const NewExtension: string = '*'): string;
+    function ExeFileName(const NewExtension: string = '*'): string;
+  /// <summary> Devuelve el Path usando / como separador </summary>
     function ToStandardPath(const Path: string): string;
+  ///<summary> Devuelve el Path usando el separador nativo de la plataforma </summary>
     function ToPlatformPath(const Path: string): string;
-    function ExpandPath(const Path: string): string;
+  ///<summary> El path Root se usa para calcular todos los paths relativos.</summary>
     function RootPath(const NestedPath: string = ''): string;
+  ///<summary> Expande un path relativo a Root</summary>
+    function ExpandPath(const Path: string): string;
+  ///<summary> Path donde se encuentra el ejecutable de la aplicación</summary>
     function BinPath(const NestedPath: string = ''): string;
+
+ {$REGION 'Paths estandar en IOUtils'}
     function TempPath(const NestedPath: string = ''): string;
     function HomePath(const NestedPath: string = ''): string;
     function DocumentsPath(const NestedPath: string = ''): string;
@@ -45,6 +57,7 @@ type
     function SharedDownloadsPath(const NestedPath: string = ''): string;
     function RingtonesPath(const NestedPath: string = ''): string;
     function SharedRingtonesPath(const NestedPath: string = ''): string;
+  {$ENDREGION}
   end;
 
 type
@@ -52,10 +65,15 @@ type
   strict private
     FRootPath: string;
   protected
+  /// Si el método invocado termina en 'Path', quita esta terminación
+  /// y considera el resto un nombre de carpeta dentro de RootPath.
+  /// Crea la carpeta especificada si no existe.
     procedure MethodMissing(Method: TRttiMethod; const Args: TArray<TValue>;
       out Result: TValue); override;
   public
     constructor Create(PIID: PTypeInfo; const RootPath: string);
+  /// Establace el path Root. Si se pasa un path relativo, se referencian
+  ///  desde BinPath.
     procedure SetRootPath(const Value: string);
     function ExeFileName(const NewExtension: string = '*'): string;
     function FullExeName(const NewExtension: string = '*'): string;
@@ -87,6 +105,8 @@ type
     function SharedRingtonesPath(const NestedPath: string = ''): string;
   end;
 
+  /// Clase para extender los paths estandar con otros especificos
+  ///  en nuestra aplicacion
   TStandardPaths<T: IStandardPaths> = class(TStandardPaths)
     constructor Create(const RootPath: string);
   end;
@@ -136,9 +156,10 @@ end;
 
 function TStandardPaths.FullExeName(const NewExtension: string = '*'): string;
 begin
+  // ToDo: ParamStr(0) don't works in all platforms
   Result := ParamStr(0);
-  if Result.IsEmpty then Exit; // ParamStr(0) don't works in all platforms
-  
+  if Result.IsEmpty then Exit;
+
   if NewExtension = '*' then
     Exit;
   if NewExtension = '' then
