@@ -18,7 +18,7 @@ var
   runner : ITestRunner;
   results : IRunResults;
   logger : ITestLogger;
-  nunitLogger : ITestLogger;
+//  nunitLogger : ITestLogger;
 begin
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;
@@ -47,7 +47,9 @@ begin
 
     {$IFNDEF CI}
     //We don't want this happening when running under CI.
+    {$WARNINGS OFF}
     if (DebugHook <> 0) and (TDUnitX.Options.ExitBehavior = TDUnitXExitBehavior.Pause) then
+    {$WARNINGS OFF}
     begin
       System.Write('Done.. press <Enter> key to quit.');
       System.Readln;
