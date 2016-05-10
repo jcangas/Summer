@@ -1,8 +1,8 @@
-{
-  Summer Framework for Delphi http://github.com/jcangas/SummerFW4D
-  SummerFW4D by Jorge L. Cangas <jorge.cangas@gmail.com>
-  SummerFW4D - Copyright(c) Jorge L. Cangas, Some rights reserved.
-  Your reuse is governed by the Creative Commons Attribution 3.0 License
+{== License ==
+- "Summer for Delphi" by Jorge L. Cangas <jorge.cangas@gmail.com> is licensed under CC BY 4.0
+-  Summer for Delphi - http://github.com/jcangas/Summer
+-  Summer - Copyright(c) Jorge L. Cangas, Some rights reserved.
+-  Your reuse is governed by the Creative Commons Attribution 4.0 License http://creativecommons.org/licenses/by/4.0/
 }
 
 unit Summer.JSON;
@@ -19,6 +19,21 @@ uses
 {$SCOPEDENUMS ON}
 
 type
+  /// <summary> Atributo para dirigir la generación de JSON.
+  ///  El atributo puede aplicarse a una clase o a una property.
+  ///  Las propiedades de este atributo determinan el JSON generado
+  ///  * Names: indica que propiedades se incluirán en el json generado.
+  ///  Si el atirbuto se aplica a una clase, se refiere a las propiedades
+  ///  de esa clase. Si se aplica a una propiedad, la propiedad debe ser de tipo
+  ///  objeto, y Names seleccionará las propiedades del objeto referenciado en la propiedad.
+  ///  * Select: indica que se genera json para un clase. Tambien permite excluir
+  ///  una propiedad.
+  ///  * Embed: Se aplica a una propiedad de tipo objeto. Implica que las propiedades
+  ///  del objeto referenciado seran aplanadas en el lugar de esta propiedad, en vez de
+  ///  generarse anidadas en un nuevo objeto json.
+  ///  *FormatName: permite especificar una plantilla para Format que se aplicara para generar
+  ///  las claves json implicadas por la propiedad que tiene el atributo.
+  /// </summary>
   JSONAttribute = class(TCustomAttribute)
   private
     FNames: TArray<string>;
@@ -40,7 +55,11 @@ type
 
   TJSON = class
   public type
-    SupportedTypes = (TNone, // 00
+    JSONError = class(Exception);
+
+    /// <summary> Tipo usado para mapear Dataset FieldTypes al convertir Dataset a JSON
+    /// </summary>
+    SupportedType = (TNone, // 00
       TString, // 01
       TInteger, // 02
       TFloat, // 03
@@ -56,40 +75,45 @@ type
       ISO8601 // 2015-04-22T09:53:59.784+02:00
       );
 
-  JSONError = class(Exception);
   protected
     class function StrJSONToFloat(Value: string): Double;
     class function Error(Msg: string; Args: array of const): JSONError;
   public
     class function UnSuportedType(TypeName: string): JSONError;
 
+    /// <summary> Recuperar un JSONAttribute, si exsite </summary>
+    class function TryJSONAttr(AClass: TClass; out Found: JSONAttribute): Boolean; overload;
+    class function TryJSONAttr(Rtti: TRttiObject; out Found: JSONAttribute): Boolean; overload;
+    /// <summary> Conversion general a JSON. Toma en cuenta
+    /// el tipo de datos contenido en TValue, incluido Empty</summary>
     class function ToJSON(const Value: TValue): TJSONValue; overload;
+    /// <summary> Conversion general a JSON. Toma en cuenta el tipo de AObject:
+    ///  * si es nil, devuelve un TJSonNull.
+    ///  * si es un TJSONValue, devuelve el propio AObject.
+    ///  * si es una ObjectList, delega en ToJSONArray.
+    ///  * en otro caso, delega en ToJSONObject
+    ///  contenido en TValue</summary>
     class function ToJSON(const AObject: TObject; Select: JSONAttribute = nil): TJSONValue; overload;
+
+    {$REGION 'Conversores especificos a JSON '}
     class function ToJSONObject(const AObject: TObject; Select: JSONAttribute = nil): TJSONObject;
     class function ToJSONArray(const ObjectList; Select: JSONAttribute = nil): TJSONArray;
-
-    class function TryJSONAttr(AClass: TClass; out Found: JSONAttribute): Boolean; overload;
-    class function TryJSONAttr(Prop: TRttiObject; out Found: JSONAttribute): Boolean; overload;
-
-    { DateTime to String }
     class function DateTimeToJSON(const Value: TDateTime; TipoFormat: DateTimeFormat = DateTimeFormat.Simple): string; overload;
     class function DateToJSON(const Value: TDate): string; overload;
     class function TimeToJSON(const Value: TTime; TipoFormat: DateTimeFormat = DateTimeFormat.Simple): string; overload;
+    class function DataSetToJSON(DataSet: TDataSet): TJSONObject;
+    {$ENDREGION}
 
-    { String to DateTime }
+    {$REGION 'Conversores desde JSON'}
     class function DateTimeFromJSON(const Value: string; UseLocalTime: Boolean = True): TDateTime; overload;
     class function DateFromJSON(const Value: string): TDate; overload;
     class function TimeFromJSON(const Value: string; UseLocalTime: Boolean = True): TTime; overload;
+    {$ENDREGION}
 
-    { StringJSON to TValue }
-    class function StrJSONToTValue(ValueType: SupportedTypes; Value: string): TValue;
+    /// Convierte string JSON a TValue de acuerdo a un SupportedType. Levanta exception si no es posible.
+    class function StrJSONToTValue(ValueType: SupportedType; Value: string): TValue;
 
-    { DataSet to JSON }
-    class function DataSetToJSON(DataSet: TDataSet): TJSONObject;
-
-    { JSON Pretty Print }
     class function PrettyPrint(const value : TJSONValue; const IdentString : string = '  ') : string;
-
   end;
 
 implementation
@@ -129,7 +153,7 @@ type
     class function TimeToSimple(Value: TTime): string;
 
     class function InternalTimeToJSON(const Value: TDateTime; TipoFormat: TJSON.DateTimeFormat = TJSON.DateTimeFormat.Simple): string;
-    // La diferencia del no internal, es que aqui revibimos tambien la fecha.
+    // La diferencia del no internal, es que aqui recibimos tambien la fecha.
     class function InternalTimeFromJSON(const Value: string; const dFecha: TDate; UseLocalTime: Boolean = True): TTime; overload;
   public
     { DateTime to String }
@@ -145,7 +169,7 @@ type
 
   TDataSetJSON = class
   private
-    class function FieldTypeToDTOColumnType(FieldType: TFieldType): TJSON.SupportedTypes;
+    class function FieldTypeToDTOColumnType(FieldType: TFieldType): TJSON.SupportedType;
   protected
     class function ToJSONFieldsDef(DataSet: TDataSet): TJSONObject;
     class function ToJSONValues(DataSet: TDataSet): TJSONArray; // All Lines
@@ -469,31 +493,31 @@ end;
 
 { TDataSetJSON }
 
-class function TDataSetJSON.FieldTypeToDTOColumnType(FieldType: TFieldType): TJSON.SupportedTypes;
+class function TDataSetJSON.FieldTypeToDTOColumnType(FieldType: TFieldType): TJSON.SupportedType;
 begin
   { resumimos en unos cuantos }
   if FieldType in [TFieldType.ftString, TFieldType.ftFixedChar, TFieldType.ftWideString, TFieldType.ftGuid, TFieldType.ftFixedWideChar] then begin
-    Result := TJSON.SupportedTypes.TString;
+    Result := TJSON.SupportedType.TString;
   end
   else if FieldType in [TFieldType.ftSmallint, TFieldType.ftInteger, TFieldType.ftAutoInc, TFieldType.ftLargeint, TFieldType.ftShortint, TFieldType.ftSingle]
   then begin
-    Result := TJSON.SupportedTypes.TInteger;
+    Result := TJSON.SupportedType.TInteger;
   end
   else if FieldType in [TFieldType.ftFloat, TFieldType.ftCurrency, TFieldType.ftBCD, TFieldType.ftFMTBcd, TFieldType.ftWord, TFieldType.ftLongWord,
     TFieldType.ftExtended] then begin
-    Result := TJSON.SupportedTypes.TFloat;
+    Result := TJSON.SupportedType.TFloat;
   end
   else if FieldType in [TFieldType.ftBoolean] then begin
-    Result := TJSON.SupportedTypes.TBoolean;
+    Result := TJSON.SupportedType.TBoolean;
   end
   else if FieldType in [TFieldType.fTDateTime, TFieldType.ftTimeStamp, TFieldType.ftTimeStampOffset] then begin
-    Result := TJSON.SupportedTypes.TDateTime;
+    Result := TJSON.SupportedType.TDateTime;
   end
   else if FieldType in [TFieldType.ftDate] then begin
-    Result := TJSON.SupportedTypes.TDate;
+    Result := TJSON.SupportedType.TDate;
   end
   else if FieldType in [TFieldType.ftTime] then begin
-    Result := TJSON.SupportedTypes.TTime;
+    Result := TJSON.SupportedType.TTime;
   end
   else begin
     raise TJSON.UnSuportedType(TEnumHelper<TFieldType>.ToString(FieldType));
@@ -510,13 +534,13 @@ end;
 class function TDataSetJSON.ToJSONFieldsDef(DataSet: TDataSet): TJSONObject;
 var
   Field: TField;
-  ColJSONType: TJSON.SupportedTypes;
+  ColJSONType: TJSON.SupportedType;
 begin
   Result := TJSONObject.Create;
 
   for Field in DataSet.Fields do begin
     ColJSONType := Self.FieldTypeToDTOColumnType(Field.DataType);
-    Result.AddPair(Field.FieldName, TEnumHelper<TJSON.SupportedTypes>.ToString(ColJSONType));
+    Result.AddPair(Field.FieldName, TEnumHelper<TJSON.SupportedType>.ToString(ColJSONType));
   end;
 end;
 
@@ -527,7 +551,7 @@ begin
   Result := TJSONArray.Create;
 
   if not DataSet.IsEmpty then begin
-    DataSet.DisableControls;
+    DataSet.BlockReadSize := 1;
     try
       LBookmark := DataSet.Bookmark;
       try
@@ -543,7 +567,7 @@ begin
         DataSet.FreeBookmark(LBookmark);
       end;
     finally
-      DataSet.EnableControls;
+      DataSet.BlockReadSize := 0;
     end;
   end;
 end;
@@ -551,7 +575,7 @@ end;
 class function TDataSetJSON.ToJSONValue(DataSet: TDataSet): TJSONObject;
 var
   Field: TField;
-  SuportedType: TJSON.SupportedTypes;
+  SuportedType: TJSON.SupportedType;
 begin
   Result := TJSONObject.Create;
 
@@ -562,32 +586,32 @@ begin
     else begin
       SuportedType := Self.FieldTypeToDTOColumnType(Field.DataType);
 
-      if (SuportedType = TJSON.SupportedTypes.TString) then begin
+      if (SuportedType = TJSON.SupportedType.TString) then begin
         Result.AddPair(Field.FieldName, Field.AsWideString);
       end
-      else if (SuportedType = TJSON.SupportedTypes.TInteger) then begin
+      else if (SuportedType = TJSON.SupportedType.TInteger) then begin
         Result.AddPair(Field.FieldName, TJSONNumber.Create(Field.AsLargeInt));
       end
-      else if (SuportedType = TJSON.SupportedTypes.TFloat) then begin
+      else if (SuportedType = TJSON.SupportedType.TFloat) then begin
         Result.AddPair(Field.FieldName, TJSONNumber.Create(Field.AsFloat));
       end
-      else if (SuportedType = TJSON.SupportedTypes.TBoolean) then begin
+      else if (SuportedType = TJSON.SupportedType.TBoolean) then begin
         if Field.AsBoolean then
           Result.AddPair(Field.FieldName, TJSONTrue.Create)
         else
           Result.AddPair(Field.FieldName, TJSONFalse.Create);
       end
-      else if (SuportedType = TJSON.SupportedTypes.TDateTime) then begin
+      else if (SuportedType = TJSON.SupportedType.TDateTime) then begin
         Result.AddPair(Field.FieldName, Field.AsDateTime.ToJSON);
       end
-      else if (SuportedType = TJSON.SupportedTypes.TDate) then begin
+      else if (SuportedType = TJSON.SupportedType.TDate) then begin
         Result.AddPair(Field.FieldName, Field.AsDateTime.Date.ToJSON);
       end
-      else if (SuportedType = TJSON.SupportedTypes.TTime) then begin
+      else if (SuportedType = TJSON.SupportedType.TTime) then begin
         Result.AddPair(Field.FieldName, Field.AsDateTime.Time.ToJSON);
       end
       else begin
-        raise TJSON.UnSuportedType(TEnumHelper<TJSON.SupportedTypes>.ToString(SuportedType));
+        raise TJSON.UnSuportedType(TEnumHelper<TJSON.SupportedType>.ToString(SuportedType));
       end;
     end;
   end;
@@ -740,13 +764,13 @@ begin
   Result := TryJSONAttr(RContext.GetType(AClass), Found)
 end;
 
-class function TJSON.TryJSONAttr(Prop: TRttiObject; out Found: JSONAttribute): Boolean;
+class function TJSON.TryJSONAttr(Rtti: TRttiObject; out Found: JSONAttribute): Boolean;
 var
   Attr: TCustomAttribute;
 begin
   Result := False;
   Found := nil;
-  for Attr in Prop.GetAttributes do begin
+  for Attr in Rtti.GetAttributes do begin
     if Attr.InheritsFrom(JSONAttribute) then begin
       Found := JSONAttribute(Attr);
       Exit(True);
@@ -806,7 +830,7 @@ begin
   Result := Self.Error(StrUnSuportedType, [TypeName]);
 end;
 
-class function TJSON.StrJSONToTValue(ValueType: SupportedTypes; Value: string): TValue;
+class function TJSON.StrJSONToTValue(ValueType: SupportedType; Value: string): TValue;
 var
   DateTime: TDateTime;
   Date: TDate;
@@ -819,29 +843,29 @@ begin
   end;
 
   // Otros tipos
-  if (ValueType = SupportedTypes.TString) then begin
+  if (ValueType = SupportedType.TString) then begin
     Result := TValue.From<string>(Value);
   end
-  else if (ValueType = SupportedTypes.TInteger) then begin
+  else if (ValueType = SupportedType.TInteger) then begin
     Result := TValue.From<Integer>(StrToInt(Value));
   end
-  else if (ValueType = SupportedTypes.TFloat) then begin
+  else if (ValueType = SupportedType.TFloat) then begin
     Result := TValue.From<Double>(Self.StrJSONToFloat(Value));
   end
-  else if (ValueType = SupportedTypes.TBoolean) then begin
+  else if (ValueType = SupportedType.TBoolean) then begin
     Result := TValue.From<Boolean>(StrToBool(Value));
   end
-  else if (ValueType = SupportedTypes.TDateTime) then begin
+  else if (ValueType = SupportedType.TDateTime) then begin
     Result := TValue.From<TDateTime>(DateTime.FromJSON(Value));
   end
-  else if (ValueType = SupportedTypes.TDate) then begin
+  else if (ValueType = SupportedType.TDate) then begin
     Result := TValue.From<TDate>(Date.FromJSON(Value));
   end
-  else if (ValueType = SupportedTypes.TTime) then begin
+  else if (ValueType = SupportedType.TTime) then begin
     Result := TValue.From<TTime>(Time.FromJSON(Value));
   end
   else begin
-    raise UnSuportedType(TEnumHelper<SupportedTypes>.ToString(ValueType));
+    raise UnSuportedType(TEnumHelper<SupportedType>.ToString(ValueType));
   end;
 end;
 

@@ -1,8 +1,8 @@
-{
-  Summer Framework for Delphi http://github.com/jcangas/SummerFW4D
-  SummerFW4D by Jorge L. Cangas <jorge.cangas@gmail.com>
-  SummerFW4D - Copyright(c) Jorge L. Cangas, Some rights reserved.
-  Your reuse is governed by the Creative Commons Attribution 3.0 License
+﻿{ == License ==
+  - "Summer for Delphi" by Jorge L. Cangas <jorge.cangas@gmail.com> is licensed under CC BY 4.0
+  -  Summer for Delphi - http://github.com/jcangas/Summer
+  -  Summer - Copyright(c) Jorge L. Cangas, Some rights reserved.
+  -  Your reuse is governed by the Creative Commons Attribution 4.0 License http://creativecommons.org/licenses/by/4.0/
 }
 
 unit Summer.Encryption;
@@ -15,7 +15,10 @@ uses
   Summer.IEncryption;
 
 type
-
+  /// Una implmentación por defecto de IEncrypter. Podemos crear nuevos servicios de encriptación partiendo
+  /// de esta clase sin más que redefinir los métodos:
+  /// function Encrypt(const Value: TBytes): TBytes;
+  /// function Decrypt(const Value: TBytes): TBytes;
   TCustomEncrypter = class(TinterfacedObject, IEncrypter)
   strict private
     FActiveMode: TValue;

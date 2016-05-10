@@ -42,4 +42,5 @@ TJSON.ToJsonObject(Entity, 'Fecha, Hora, Paciente: {Apellidos, Nombre, NumPac, T
 
 == Enhancements / Refactorings
 
+== add a lot of Test
 == Bug fixing

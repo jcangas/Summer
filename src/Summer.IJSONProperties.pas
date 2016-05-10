@@ -1,3 +1,10 @@
+{== License ==
+- "Summer for Delphi" by Jorge L. Cangas <jorge.cangas@gmail.com> is licensed under CC BY 4.0
+-  Summer for Delphi - http://github.com/jcangas/Summer
+-  Summer - Copyright(c) Jorge L. Cangas, Some rights reserved.
+-  Your reuse is governed by the Creative Commons Attribution 4.0 License http://creativecommons.org/licenses/by/4.0/
+}
+
 unit Summer.IJSONProperties;
 
 interface
@@ -8,6 +15,13 @@ uses
   , System.Classes;
 
 type
+  ///<summary>
+  ///  A JSON persistent map of string to TValue.
+  ///  Easy use with TValue or TJSONValue.
+  ///  Support "nested properties": a key can be mapped to another IJSONProperties.
+  ///  Support "key navigation", so MyProps['key.subkey'] is equivalent to
+  ///  MyProps['key']['subkey'] if MyProps['key'] contains a IJSONProperties.
+  ///</summary>
   IJSONProperties = interface
     ['{93C26BFE-A8DA-4DF9-9AC8-0AF63B16E098}']
     function GetCount: Integer;
@@ -29,6 +43,7 @@ type
     procedure SetAsJSON(const Value: string);
     function GetAsObject: TJSONObject;
     procedure SetAsObject(const Value: TJSONObject);
+    function Contains(const Name: string): Boolean;
     property AsJSON: string read GetAsJSON write SetAsJSON;
     property AsObject: TJSONObject read GetAsObject write SetAsObject;
     property FileName: string read GetFileName;

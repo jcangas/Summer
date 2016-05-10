@@ -1,3 +1,10 @@
+{== License ==
+- "Summer for Delphi" by Jorge L. Cangas <jorge.cangas@gmail.com> is licensed under CC BY 4.0
+-  Summer for Delphi - http://github.com/jcangas/Summer
+-  Summer - Copyright(c) Jorge L. Cangas, Some rights reserved.
+-  Your reuse is governed by the Creative Commons Attribution 4.0 License http://creativecommons.org/licenses/by/4.0/
+}
+
 unit Summer.Win.SvcCtrl;
 
 interface
@@ -7,6 +14,11 @@ uses
   Summer.Win.ISvcCtrl;
 
 type
+  /// Implementacion del API de control de servicio.
+  /// El status se consulta a traves de la API de Windows.
+  ///  El resto de operaciones se delegan en la consola sc.exe
+  ///  invocando la consola de windows con elevación de permisos
+  ///  mediante la opcion "runas".
   TWinServiceControl = class(TInterfacedObject, IWinServiceControl)
   strict private
     FServiceExePath: string;
