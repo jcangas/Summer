@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
   Summer.ILogger, FMX.Layouts, FMX.Memo, FMX.Controls.Presentation,
-  FMX.Edit, FMX.EditBox, FMX.NumberBox;
+  FMX.Edit, FMX.EditBox, FMX.NumberBox, FMX.ScrollBox;
 
 type
   TTestInfo = record
@@ -44,6 +44,7 @@ uses
   System.Diagnostics,
   System.IOUtils,
   Summer.CLI,
+  Summer.Utils,
   Summer.Logger;
 
 {$R *.fmx}
@@ -117,7 +118,7 @@ begin
       ReportWrite('');
       ReportWrite('Ejecutando test usando %s ...', [Info.Descrip]);
       ElapsedMs := TestLogger(RepeatCount, Info.Writer);
-      ReportWrite('Tiempo empleado Total= %sms | media= %sms', [FormatFloat('###,##0', ElapsedMs), FormatFloat('###,##0', ElapsedMs / RepeatCount)]);
+      ReportWrite('Tiempo empleado Total= %sms | media= %sms', [FormatFloat('###,##0', ElapsedMs), FormatFloat('###,##0.000', ElapsedMs / RepeatCount)]);
     end;
   finally
     ClearLoggersToTest;
@@ -127,22 +128,22 @@ end;
 
 function TMainForm.TestLogger(const RepeatCount: Integer; const Writer: TLog.Writer): Int64;
 var
-  Chrono: TStopwatch;
-  i: Integer;
   UsedFilename: string;
 begin
   Logger.AddWriter(Writer);
-  Chrono := TStopwatch.StartNew;
-  for i := 1 to RepeatCount do
-    Logger.Info('test logger msg nro: %d', [i]);
-  Result := Chrono.ElapsedMilliseconds;
+  Result := TBenchmark.Measure(procedure
+    var i: Integer;
+    begin
+      for i := 1 to RepeatCount do
+        Logger.Info('test logger msg nro: %d', [i]);
+    end
+  );
   if Writer is TTextFileLogWriter then
     UsedFilename := TTextFileLogWriter(Writer).FileName
   else
     UsedFilename := '';
   Logger.RemoveWriter(Writer);
   if TFile.Exists(UsedFilename) then TFile.Delete(UsedFilename);
-
 end;
 
 procedure TMainForm.Button1Click(Sender: TObject);

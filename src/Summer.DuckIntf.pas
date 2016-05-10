@@ -27,7 +27,14 @@ type
     FOnMethodMissing: TVirtualInterfaceInvokeEvent;
   protected
     procedure DefaultInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
+  /// <summary> Busca el método en el objeto FDelegated y lo invoca si lo encuentra.
+  ///  Retorna True si invoca y Faalse si no invoca.
+  /// </summary>
     function Delegate(Method: TRttiMethod; const Args: TArray<TValue>; out MethodResult: TValue): Boolean;
+  /// <summary> Si no se logra invocar el método en FDeleagated, se invoca este
+  ///  método que las clases descendientes pueden redefinir. La implmemntación aqui
+  ///  delega en el evento OnMethodMissing.
+  /// </summary>
     procedure MethodMissing(Method: TRttiMethod; const Args: TArray<TValue>;out Result: TValue); virtual;
   public
     class function GetGUID(PIID: PTypeInfo): TGUID;
@@ -56,7 +63,6 @@ begin
     FDelegated := Self
   else
     FDelegated := Delegated;
-
 end;
 
 function TDuckInterface.Delegate(Method: TRttiMethod;

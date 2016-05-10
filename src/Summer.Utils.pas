@@ -22,11 +22,15 @@ uses
 {$SCOPEDENUMS ON}
 
 type
+  /// <summary>
+  /// Un tipo para emular enumerados que se puedan extender, es decir, definir nuevos
+  ///  valores una vez el tipo a sido declarado.
+  ///  </summary>
   TOpenEnum = record
   type
     Code = Integer;
     CodeSet = array of Code;
-  public // yes! in order we can declare as initialized const
+  public // Public para poder declarar valores inicializados
     FValue: Code;
     FID: string;
   public
@@ -46,12 +50,19 @@ type
     property ID: string read FID;
   end;
 
+  /// <summary>
+  /// Utilidad para que un object pueda sincronizar su ciclo de vida como un component.
+  ///  Para usarlo, guardamos una instancia de TFreeNotifier en nuestro Object, dirigiendo
+  ///  sus eventos OnFreeNotification y/o OnDestroy, a métodos en nuestro Object.
+  ///  A donde necesitemos que nuestro Object se comporte como Component, pasamos nuestro FreeNotifier.
+  ///  </summary>
   TFreeNotifier = class(TComponent)
   private
     FOnFreeNotification: TProc<TComponent>;
     FOnDestroy: TProc<TComponent>;
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+
     procedure DoOnDestroy; virtual;
     procedure DoOnFreeNotification(Sender: TComponent); virtual;
   public
@@ -60,6 +71,9 @@ type
     property OnDestroy: TProc<TComponent> read FOnDestroy write FOnDestroy;
   end;
 
+  /// <summary>
+  /// Interface de una lista que posee su objetos. Ver TPurgatory
+  /// </summary>
   IOwnedList = interface
     ['{60FA02D9-7CC9-40D8-9CC2-7CF085E6F761}']
     procedure Clear;
@@ -83,6 +97,15 @@ type
     function IsEmpty: Boolean;
   end;
 
+  /// <summary>
+  /// Utilidad para recolectar objetos a destruir. Al ser un record
+  ///  su memoria es limpiada automaticamente por el compilador
+  /// cuando el record deja estar en uso.
+  ///  En particular FOwnedListes asignada a nil y al ser private
+  ///  esta es la unica referencia, por lo que su RefCount se pondrá
+  ///  a cero y la IOwnedList se destruirá tambien automaticamente.
+  ///  El uso de TPurgatory nos ahorra escribir try .. finally
+  /// </summary>
   TPurgatory = record
   private
     FOwneList: IOwnedList;
@@ -95,32 +118,37 @@ type
     function IsEmpty: Boolean;
   end;
 
-  TWeakInterfaced = class(TInterfacedObject, IInterface)
-  private
-    FWeakRef: Boolean;
-  public
-    function WeakRef(const Value: Boolean): TWeakInterfaced;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
-  end;
-
+  /// <summary>
+  /// Invocación de comandos en la shell, version multiplataforma
+  /// <summary>
   TOSShell = class
   public type
     ShowMode = (Hide, Normal);
-
   public
     class function Open(Command: string; Parameters: string = ''; const Mode: ShowMode = ShowMode.Normal): Integer;
-    // TODO: impl for MACOS ??
+
+    // FIX: ahora solo WINDOWS. Deberiamos buscar como se implementa para otras plataformas
     class function RunAs(Command: string; Parameters: string = ''; const Mode: ShowMode = ShowMode.Normal): Cardinal;
   end;
 
+  /// <summary>
+  /// Utilidades relacionads con el debugger
+  /// </summary>
   TDebugger = class
   public
+  /// <summary> Enviar texto a la consola de depuración </summary>
     class procedure Output(const FmtText: string; Args: array of const); overload;
     class procedure Output(Text: string); overload;
+
+  /// <summary>Detecta si la aplciación se ejecuta en un depurador.</summary>
     class function IsEnabled: Boolean;
   end;
 
+  /// <summary>
+  /// Maneja una colección de clave-valor. Se puede inicializar copiando un subconjunto
+  /// de las propiedades "planas" de un objeto. En ese caso guarda tambien la rtti de
+  /// la propiedad. TSlice tambien facilita la conversion a/desde JSON
+  /// </summary>
   TSlice = record
   public type
     PItem = ^TItem;
@@ -148,27 +176,36 @@ type
       property IsProperty: Boolean read GetIsProperty;
     end;
 
-  TEnumProc = reference to procedure(var Item: TItem; var StopEnum: Boolean);
-  private
+  TEnumProc = reference to procedure(var Item: TItem);
+
   strict private
     RC: TRTTIContext;
     FForClass: TClass;
     FItems: TArray<TItem>;
     function GetItemOf(Name: string): PItem;
     procedure SetForClass(const Value: TClass);
-
   public
-    constructor Create(const ANames: array of string; const AClass: TClass = nil); overload;
-    constructor Create(const ANames: array of string; const Instance: TObject); overload;
-    constructor Create(const Instance: TObject); overload;
+  /// <summary>Inicia los Items basandose en las propiedades planas de AClass. Los Items no tendran valor, solo nombre y RTTI</summary>
     constructor Create(const AClass: TClass);overload;
+  /// <summary>Igual que la anterior, pero solo las propiedades cuyo nombre está en ANames.
+  ///  Si AClass = nil, entonces crea Items con los nombres de ANames.
+  /// </summary>
+    constructor Create(const ANames: array of string; const AClass: TClass = nil); overload;
+  /// <summary>Igual que la anterior, pero los items toman valor de la correspondiente propiedad de Instance.
+  /// </summary>
+    constructor Create(const ANames: array of string; const Instance: TObject); overload;
+  /// <summary>Igual que la anterior, pero toma todas las propiedades planas</summary>
+    constructor Create(const Instance: TObject); overload;
+  /// <summary>Copia un JSONObject </summary>
     constructor Create(const JSONObj: TJSONObject); overload;
-    constructor Create(Name: string; Value: TValue);overload;
+
     function ToJSONObject: TJSONObject;
     class operator Implicit(const Value: TSlice): TJSONObject;
     class operator Implicit(const Value: TJSONObject): TSlice;
+
     function Add(Name: string): TSlice;overload;
     function Add(AName: string; AValue: TValue): TSlice;overload;
+
     function Count: Integer;
     function IndexOf(const AName: string): Integer;
     function Contains(const AName: string): Boolean;
@@ -181,24 +218,34 @@ type
     property ItemOf[index: string]: PItem read GetItemOf; default;
   end;
 
+  /// <summary>Comparador case-insensitive</summary>
   TTextComparer = class(TInterfacedObject, IEqualityComparer<string>)
   public
     function Equals(const Left, Right: string): Boolean; reintroduce;
     function GetHashCode(const Value: string): Integer; reintroduce;
   end;
 
-  /// Compiler don't supports Helpers for generics. Best guest:
+  ///<summary> El compilador no soporta Helpers en tipos Genericos.
+  ///  Usameros un cast a este tipo como mejor solución para mejorar
+  ///  las TObjectList</summary>
   TObjectListHelper<T: class, constructor> = class(TObjectList<T>)
   public
     function IsEmpty: Boolean;
+   ///<summary> TObjectList<> levanta excepcion si la lista es vacia
+   /// Esta implementación simplemente devuelve nil.</summary>
     function First: T;
+   ///<summary> TObjectList<> levanta excepcion si la lista es vacia
+   /// Esta implementación simplemente devuelve nil.</summary>
     function Last: T;
     function AsJSON: TJSONArray;
   end;
 
-  /// Used to cast generic TObjectList<T> types:
-  /// Don't add state fields, no virtual methods !!!
-  /// FItemClass is special: Summer.RTTI use it in TryObjListItemClass
+  ///<summary> Clase para manejar TObjectList de forma generica
+  ///  No extender con Campos miembro ni virtual methods !!!
+  ///  Summer hace cast a este tipo en determinados lugares.
+  ///  Se pueden crear instancias de esta clase.
+  ///  FItemClass is special: Summer.RTTI use it in TryObjListItemClass
+  /// </summary>
   TAnyObjecList = class(TObjectListHelper<TObject>)
   strict private
     FItemClass: TClass;
@@ -211,9 +258,13 @@ type
 
   TAnyObjecListClass = class of TAnyObjecList;
 
+  /// <summary>Facilidad para medir la duración de la ejecuación de un bloque de código.</summary>
   TBenchmark = class
   public
+    /// Retorna los milisec. que consume P;
     class function Measure(P: TProc): Int64;
+    ///  Inicia un Stopwatch, ejecuta P y detiene el StopWatch.
+    ///  Retorna el StopWatch usado.
     class function StopWatch(P: TProc): TStopWatch;
   end;
 
@@ -380,32 +431,6 @@ begin
   if Operation = opRemove then
     DoOnFreeNotification(AComponent);
   inherited;
-end;
-
-{ TWeakInterfaced }
-
-function TWeakInterfaced.WeakRef(const Value: Boolean): TWeakInterfaced;
-begin
-  Result := Self;
-  FWeakRef := Value;
-  if FWeakRef then
-    FRefCount := 0
-  else
-    FRefCount := 1;
-end;
-
-function TWeakInterfaced._AddRef: Integer;
-begin
-  if not FWeakRef then
-    inherited;
-  Result := RefCount
-end;
-
-function TWeakInterfaced._Release: Integer;
-begin
-  if not FWeakRef then
-    inherited;
-  Result := RefCount
 end;
 
 { TOpenEnum }
@@ -617,12 +642,6 @@ begin
   end;
 end;
 
-constructor TSlice.Create(Name: string; Value: TValue);
-begin
-  Create([]);
-  Add(Name, Value);
-end;
-
 procedure TSlice.Read(Instance: TObject);
 var
   RInstance: TRttiInstanceType;
@@ -634,8 +653,7 @@ begin
     ForClass := Instance.ClassType;
 
   RInstance := RC.GetType(ForClass) as TRttiInstanceType;
-  ForEach(
-    procedure(var Item: TItem; var StopEnum: Boolean)
+  ForEach(procedure(var Item: TItem)
     begin
       RProp := RInstance.GetProperty(Item.Name) as TRttiInstanceProperty;
       if RProp = nil then
@@ -679,8 +697,7 @@ begin
     end;
   end;
 
-  ForEach(
-    procedure(var Item: TItem; var StopEnum: Boolean)
+  ForEach(procedure(var Item: TItem)
     begin
       Item.FRtti := RInstance.GetProperty(Item.Name) as TRttiInstanceProperty;
     end);
@@ -691,8 +708,7 @@ var
   JSONObject: TJSONObject;
 begin
   JSONObject := TJSONObject.Create;
-  ForEach(
-    procedure(var Item: TItem; var DoStop: Boolean)
+  ForEach(procedure(var Item: TItem)
     begin
       JSONObject.AddPair(TJSONPair.Create(Item.Name, Item.Value.AsJSON))
     end);
@@ -744,13 +760,9 @@ end;
 procedure TSlice.ForEach(Proc: TEnumProc);
 var
   idx: Integer;
-  StopEnum: Boolean;
 begin
-  StopEnum := False;
   for idx := 0 to Count - 1 do begin
-    Proc(FItems[idx], StopEnum);
-    if StopEnum then
-      Break;
+    Proc(FItems[idx]);
   end;
 end;
 

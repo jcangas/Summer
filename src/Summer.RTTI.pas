@@ -23,9 +23,19 @@ uses
 
 type
   /// <summary>
-  /// Soporte para detectar NullableTypes a traves de TTypeInfo
+  /// Soporte para clasificar tipos a traves de su TTypeInfo
   /// </summary>
   TTypeInfoHelper = record helper for TTypeInfo
+    function IsIntegerType: Boolean;
+    function IsFloatType: Boolean;
+    function IsNumberType: Boolean;
+    function IsCharType: Boolean;
+    function IsStringType: Boolean;
+    function IsBooleanType: Boolean;
+    function IsDateType: Boolean;
+    function IsTimeType: Boolean;
+    function IsDateTimeType: Boolean;
+    function IsEnumType: Boolean;
     function IsNullableType: Boolean;
     function NullableBaseType: PTypeInfo;
     function IsPlainType: Boolean;
@@ -34,14 +44,23 @@ type
   end;
 
   /// <summary>
-  /// Soporte para clasificar tipos a traves de su RTTI
+  /// Soporte para clasificar tipos a traves de su RTTI, delegando en TTypeInfoHelper
   /// </summary>
   TRttiTypeHelper = class helper for TRttiType
-  private
   public
+    function IsIntegerType: Boolean;
+    function IsFloatType: Boolean;
+    function IsNumberType: Boolean;
+    function IsCharType: Boolean;
+    function IsStringType: Boolean;
+    function IsBooleanType: Boolean;
+    function IsDateType: Boolean;
+    function IsTimeType: Boolean;
+    function IsDateTimeType: Boolean;
+    function IsEnumType: Boolean;
     function IsNullableType: Boolean; overload;
     /// <summary>
-    /// Plain type es un tipo no estructurado, es decir "no class" y "no record"
+    /// Plain type es un tipo no estructurado, es decir "no class", "no record", "no interface", "no array"
     /// </summary>
     function IsPlainType: Boolean;
     /// <summary>
@@ -55,18 +74,17 @@ type
   end;
 
   /// <summary>
-  /// Extiende TValue para facilitar su uso en diversos contextox. Especialmente generación de JSON
+  /// Extiende TValue para facilitar su uso en diversos contextox. Especialmente, generación de JSON
   /// identificación de tipos y conversión entre tipos
   /// </summary>
   TValueHelper = record helper for TValue
   private
     class function JSONToArray(const AArray: TJSONArray): TValue; static;
-
   public
-    /// <summary>
-    /// Conversión desde JSON a TValue
-    /// </summary>
+
+    /// <summary> Conversión desde JSON a TValue</summary>
     class function FromJSON(Value: TJSONValue): TValue; static;
+
     /// <summary>
     /// Intenta convertir self a ATypeInfo. El valor de retorno indica si se ha conseguido o no.
     /// Si se consigue, Converted contiene el valor convertido en forma de TValue
@@ -77,12 +95,16 @@ type
     /// - Conversión entre Enuemrables y sus cadenas identificadoras.
     /// </summary>
     function Convert(ATypeInfo: PTypeInfo; out Converted: TValue): Boolean;
+
     /// <summary>
     /// Soporte para Nullables: devuelve el TValue contenido en el Nullable o TValue.Empty si
     /// el Nullable es vacio. La función retorna Self.IsNullable
     /// </summary>
     function TryGetNullable(var Value: TValue): Boolean;
+
+    /// Igual que TryGetNullable, pero no informa si Self.IsNullable
     function GetNullable: TValue;
+
     /// <summary>
     /// Soporte para Nullables. Self debe ser Nullable o se produce excepcion.
     /// Asigna Value a Self usando RTTI, tomando en cuenta que Value puede ser nil.
@@ -93,10 +115,12 @@ type
     /// Si self es un TValue que envuelve un Array, devuelve el array correspondiente
     /// </summary>
     function AsArray: TArray<TValue>;
+
     /// <summary>
     /// Convierte Self a TJSONValue delegando en la Summer.JSON
     /// </summary>
     function AsJSON: TJSONValue;
+
     /// <summary>
     /// Helper para Summer.JSON
     /// </summary>
@@ -108,7 +132,7 @@ type
     function AsDef<T>(Def: T): T;
 
     /// <summary>
-    /// Helpers para clasificar tipos
+    /// Helpers para clasificar un TValue segun su tipo real
     /// </summary>
     function IsEnum: Boolean;
     function IsNumber: Boolean;
@@ -131,11 +155,11 @@ type
   end;
 
   /// <summary>
-  /// Varias estrategias para asigna, mediante RTTI, las properties de un objeto Target, usando otro objeto
+  /// Varias estrategias para asignar, mediante RTTI, las properties de un objeto Target, usando otro objeto
   /// como Source.
   /// == ToDo:
   /// * soporte para propeties Nullables en Target
-  /// * crear TFieldsInjector analogo pero asignado los Fields de Target en lugar de las
+  /// * Añadir clase TFieldsInjector: análoga a este pero asignado los Fields de Target en lugar de las
   /// properties.
   /// </summary>
   TPropertiesInjector = class
@@ -183,7 +207,7 @@ type
   TMethodKinds = set of TMethodKind;
 
   /// <summary>
-  /// Helpers para interrogar métodos por nombre y/o argumentos
+  /// Helpers para buscar métodos por nombre y/o argumentos
   /// </summary>
   TMethodVoter = record helper for TMethod
     class function KindIs(const AMethodKinds: TMethodKinds; Quality: TVoteQuality = TVoteQuality.VqRequires): TVoteFunc; static;
@@ -615,7 +639,7 @@ begin
     Exit;
   RTTarget := RC.GetType(Target.ClassType) as TRttiInstanceType;
   Source.ForEach(
-    procedure(var Item: TSlice.TItem; var StopEnum: Boolean)
+    procedure(var Item: TSlice.TItem)
     begin
       PropTarget := RTTarget.GetProperty(Item.Name) as TRttiInstanceProperty;
       if Assigned(PropTarget) then
@@ -855,6 +879,11 @@ begin
     tkVariant, tkInt64, tkUString]) or IsNullableType;
 end;
 
+function TTypeInfoHelper.IsEnumType: Boolean;
+begin
+  Result := Kind in [TkEnumeration];
+end;
+
 function TTypeInfoHelper.IsCollectionType: Boolean;
 begin
   Result := (Kind = tkClass) and TypeData.ClassType.IsObjList;
@@ -865,7 +894,102 @@ begin
   Result := (Kind = tkClass) and not IsCollectionType;
 end;
 
+function TTypeInfoHelper.IsNumberType: Boolean;
+begin
+  Result := Kind in [TkInteger, TkFloat, TkInt64];
+end;
+
+function TTypeInfoHelper.IsIntegerType: Boolean;
+begin
+  Result := Kind in [TkInteger, TkInt64];
+end;
+
+function TTypeInfoHelper.IsFloatType: Boolean;
+begin
+  Result := Kind in [TkFloat];
+end;
+
+function TTypeInfoHelper.IsBooleanType: Boolean;
+begin
+  Result := (@Self = System.TypeInfo(Boolean));
+end;
+
+function TTypeInfoHelper.IsStringType: Boolean;
+begin
+  Result := Kind in [TkString, TkLString, TkWString, TkUString];
+end;
+
+function TTypeInfoHelper.IsCharType: Boolean;
+begin
+  Result := Kind in [TkChar, TkWChar];
+end;
+
+function TTypeInfoHelper.IsTimeType: Boolean;
+begin
+  Result := (@Self = System.TypeInfo(TTime));
+end;
+
+function TTypeInfoHelper.IsDateType: Boolean;
+begin
+  Result := (@Self = System.TypeInfo(TDate));
+end;
+
+function TTypeInfoHelper.IsDateTimeType: Boolean;
+begin
+  Result := (@Self = System.TypeInfo(TDateTime));
+end;
+
 { TRttiTypeHelper }
+
+function TRttiTypeHelper.IsFloatType: Boolean;
+begin
+  Result := Self.Handle.IsFloatType;
+end;
+
+function TRttiTypeHelper.IsIntegerType: Boolean;
+begin
+  Result := Self.Handle.IsIntegerType;
+end;
+
+function TRttiTypeHelper.IsNumberType: Boolean;
+begin
+  Result := Self.Handle.IsNumberType;
+end;
+
+function TRttiTypeHelper.IsStringType: Boolean;
+begin
+  Result := Self.Handle.IsStringType;
+end;
+
+function TRttiTypeHelper.IsCharType: Boolean;
+begin
+  Result := Self.Handle.IsCharType;
+end;
+
+function TRttiTypeHelper.IsDateType: Boolean;
+begin
+  Result := Self.Handle.IsDateType;
+end;
+
+function TRttiTypeHelper.IsTimeType: Boolean;
+begin
+  Result := Self.Handle.IsTimeType;
+end;
+
+function TRttiTypeHelper.IsDateTimeType: Boolean;
+begin
+  Result := Self.Handle.IsDateTimeType;
+end;
+
+function TRttiTypeHelper.IsBooleanType: Boolean;
+begin
+  Result := Self.Handle.IsBooleanType;
+end;
+
+function TRttiTypeHelper.IsEnumType: Boolean;
+begin
+  Result := Self.Handle.IsEnumType;
+end;
 
 function TRttiTypeHelper.IsNullableType: Boolean;
 begin
@@ -888,6 +1012,7 @@ begin
 end;
 
 { TGroupCollectionHelper }
+
 // Helper to extract RegEx object
 type
   TScopeExitNotifierCraked = class(TInterfacedObject)

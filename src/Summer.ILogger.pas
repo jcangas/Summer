@@ -189,8 +189,8 @@ implementation
 function TLog.Formatter.Format(Event: TLog.Event): string;
 const
   FmtSt = '%TS:yyyy mmm dd/% | %TS:hh:nn:ss:zzz/% #%TH [%LV%CT] %TX';
-  // TIP: conditional formating feature using syntax ??{,}  Sample:
-  // FmtSt = '%TS:yyyy mmm dd/% | %TS:hh:nn:ss:zzz/% #%TH [%LV??{%CT,@%CT}] %TX';
+  // TIP: conditional formating. maybe with syntax {?,}  Sample:
+  // FmtSt = '%TS:yyyy mmm dd/% | %TS:hh:nn:ss:zzz/% #%TH [%LV{?%CT,@%CT}] %TX';
   // TIP: Quiza lo mejor es una sintaxis tipo Liquid {{ }}
 
 var

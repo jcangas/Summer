@@ -12,7 +12,12 @@ interface
 uses Classes, SysUtils, RTTI;
 
 type
-  /// Win Command Line Interface. EXPERIMENTAL
+  /// <summary> Windows Command Line Interface. Todavia experimental!!
+  ///  Pretende ser util para crear aplicaciones que pueden ejcutarse en modo
+  ///  consola o GUI. Permite que una aplicación invocada desde consola
+  ///  use la consola desde la que se invoca o abrir una consola nueva.
+  ///  En un futuro se pretende que se puedan expresar las opciones de linea
+  ///  de comandos soportados mediante Anotaciones de codigo asociadas a métodos.
   CLI = class(TObject)
   public type
     TConsoleMode = (cmUnknown, cmConsoleApp, cmFromParent, cmAllocated, cmGUIApp);
@@ -36,9 +41,9 @@ type
     class procedure DoError(E: Exception);
   public
     class function CheckConsole(Options: TConsoleOptions = []): TConsoleMode;
-    class function ConsoleApp: Boolean; static;
-    class function CreateConsole: Boolean;static;
-    class function AttachParentConsole: Boolean;static;
+    class function ConsoleApp: Boolean;
+    class function CreateConsole: Boolean;
+    class function AttachParentConsole: Boolean;
     class function ParseCmd: Boolean;
     class function Run: Boolean;
     class property OnBeforeExecute: TExecuteEvent read FOnBeforeExecute write FOnBeforeExecute;
