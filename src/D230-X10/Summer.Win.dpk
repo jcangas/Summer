@@ -38,7 +38,8 @@ package Summer.Win;
 
 requires
   rtl,
-  dbrtl;
+  dbrtl,
+  Summer;
 
 contains
   Summer.Win.ISvcCtrl in '..\Summer.Win.ISvcCtrl.pas',
