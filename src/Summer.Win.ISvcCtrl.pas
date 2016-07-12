@@ -1,3 +1,10 @@
+{== License ==
+- "Summer for Delphi" by Jorge L. Cangas <jorge.cangas@gmail.com> is licensed under CC BY 4.0
+-  Summer for Delphi - http://github.com/jcangas/Summer
+-  Summer - Copyright(c) Jorge L. Cangas, Some rights reserved.
+-  Your reuse is governed by the Creative Commons Attribution 4.0 License http://creativecommons.org/licenses/by/4.0/
+}
+
 unit Summer.Win.ISvcCtrl;
 
 interface
@@ -21,6 +28,9 @@ type
     class function ToString(const Status: Cardinal): string;reintroduce;
   end;
 
+  /// Interface para abstraer un servicio Windows. Notar que en esta unit no se referencia
+  ///  Windows directamente. Con esta interfaz se pretende abstraer el control del ciclo de vida
+  /// de un servicio arbitrario, al tiempo que se facilita su integración en SICO.
   IWinServiceControl = interface
     ['{B4F5E2DC-6714-42F5-9CE5-1F92FEA5D8DE}']
     function GetStatus: Cardinal;

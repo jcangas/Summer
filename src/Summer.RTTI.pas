@@ -1,8 +1,8 @@
-{
-  Summer Framework for Delphi http://github.com/jcangas/SummerFW4D
-  SummerFW4D by Jorge L. Cangas <jorge.cangas@gmail.com>
-  SummerFW4D - Copyright(c) Jorge L. Cangas, Some rights reserved.
-  Your reuse is governed by the Creative Commons Attribution 3.0 License
+{ == License ==
+  - "Summer for Delphi" by Jorge L. Cangas <jorge.cangas@gmail.com> is licensed under CC BY 4.0
+  -  Summer for Delphi - http://github.com/jcangas/Summer
+  -  Summer - Copyright(c) Jorge L. Cangas, Some rights reserved.
+  -  Your reuse is governed by the Creative Commons Attribution 4.0 License http://creativecommons.org/licenses/by/4.0/
 }
 
 unit Summer.RTTI;
@@ -22,35 +22,118 @@ uses
 
 
 type
+  /// <summary>
+  /// Soporte para clasificar tipos a traves de su TTypeInfo
+  /// </summary>
   TTypeInfoHelper = record helper for TTypeInfo
+    function IsIntegerType: Boolean;
+    function IsFloatType: Boolean;
+    function IsNumberType: Boolean;
+    function IsCharType: Boolean;
+    function IsStringType: Boolean;
+    function IsBooleanType: Boolean;
+    function IsDateType: Boolean;
+    function IsTimeType: Boolean;
+    function IsDateTimeType: Boolean;
+    function IsEnumType: Boolean;
     function IsNullableType: Boolean;
-  end;
-
-  TRttiTypeHelper = class helper for TRttiType
-  private
-  public
-    function IsNullableType: Boolean; overload;
+    function NullableBaseType: PTypeInfo;
     function IsPlainType: Boolean;
     function IsCollectionType: Boolean;
     function IsReferenceType: Boolean;
   end;
 
+  /// <summary>
+  /// Soporte para clasificar tipos a traves de su RTTI, delegando en TTypeInfoHelper
+  /// </summary>
+  TRttiTypeHelper = class helper for TRttiType
+  public
+    function IsIntegerType: Boolean;
+    function IsFloatType: Boolean;
+    function IsNumberType: Boolean;
+    function IsCharType: Boolean;
+    function IsStringType: Boolean;
+    function IsBooleanType: Boolean;
+    function IsDateType: Boolean;
+    function IsTimeType: Boolean;
+    function IsDateTimeType: Boolean;
+    function IsEnumType: Boolean;
+    function IsNullableType: Boolean; overload;
+    /// <summary>
+    /// Plain type es un tipo no estructurado, es decir "no class", "no record", "no interface", "no array"
+    /// </summary>
+    function IsPlainType: Boolean;
+    /// <summary>
+    /// Es un tipo "Lista de X" ?
+    /// </summary>
+    function IsCollectionType: Boolean;
+    /// <summary>
+    /// Un tipo objeto, pero "no colección"
+    /// </summary>
+    function IsReferenceType: Boolean;
+  end;
+
+  /// <summary>
+  /// Extiende TValue para facilitar su uso en diversos contextox. Especialmente, generación de JSON
+  /// identificación de tipos y conversión entre tipos
+  /// </summary>
   TValueHelper = record helper for TValue
   private
     class function JSONToArray(const AArray: TJSONArray): TValue; static;
-
   public
+
+    /// <summary> Conversión desde JSON a TValue</summary>
     class function FromJSON(Value: TJSONValue): TValue; static;
+
+    /// <summary>
+    /// Intenta convertir self a ATypeInfo. El valor de retorno indica si se ha conseguido o no.
+    /// Si se consigue, Converted contiene el valor convertido en forma de TValue
+    /// Este método existe porque las conversiones estandar de TValue, no contemplan algunos casos
+    /// de interés:
+    /// - Conversión de una cadena númerica al valor numerico representado
+    /// - Conversión entre Enuemrables y sus ordinales
+    /// - Conversión entre Enuemrables y sus cadenas identificadoras.
+    /// </summary>
     function Convert(ATypeInfo: PTypeInfo; out Converted: TValue): Boolean;
-    function TryGetNullable(out Value: TValue): Boolean;
+
+    /// <summary>
+    /// Soporte para Nullables: devuelve el TValue contenido en el Nullable o TValue.Empty si
+    /// el Nullable es vacio. La función retorna Self.IsNullable
+    /// </summary>
+    function TryGetNullable(var Value: TValue): Boolean;
+
+    /// Igual que TryGetNullable, pero no informa si Self.IsNullable
+    function GetNullable: TValue;
+
+    /// <summary>
+    /// Soporte para Nullables. Self debe ser Nullable o se produce excepcion.
+    /// Asigna Value a Self usando RTTI, tomando en cuenta que Value puede ser nil.
+    /// </summary>
     procedure SetNullable(const Value: TValue);
 
+    /// <summary>
+    /// Si self es un TValue que envuelve un Array, devuelve el array correspondiente
+    /// </summary>
     function AsArray: TArray<TValue>;
-    function AsJSON: TJSONValue;
-    function AsDef<T>(Def: T): T;
 
+    /// <summary>
+    /// Convierte Self a TJSONValue delegando en la Summer.JSON
+    /// </summary>
+    function AsJSON: TJSONValue;
+
+    /// <summary>
+    /// Helper para Summer.JSON
+    /// </summary>
     function ArrayToJSON: TJSONArray;
 
+    /// <summary>
+    /// Convierte Self a T usando Convert. Si no es posible retorna Def
+    /// </summary>
+    function AsDef<T>(Def: T): T;
+
+    /// <summary>
+    /// Helpers para clasificar un TValue segun su tipo real
+    /// </summary>
     function IsEnum: Boolean;
     function IsNumber: Boolean;
     function IsInteger: Boolean;
@@ -62,26 +145,57 @@ type
     function IsTime: Boolean;
     function IsDateTime: Boolean;
     function IsNullable: Boolean;
+
+    /// <summary>
+    /// Estos helpers básicos faltan en el API estándar
+    /// </summary>
     function AsDate: TDate;
     function AsTime: TTime;
     function AsDateTime: TDateTime;
   end;
 
-  TValuesInjector = class
+  /// <summary>
+  /// Varias estrategias para asignar, mediante RTTI, las properties de un objeto Target, usando otro objeto
+  /// como Source.
+  /// == ToDo:
+  /// * soporte para propeties Nullables en Target
+  /// * Añadir clase TFieldsInjector: análoga a este pero asignado los Fields de Target en lugar de las
+  /// properties.
+  /// </summary>
+  TPropertiesInjector = class
   private
   public
+    /// <summary>
+    /// Asigna las properties de Target a partir de los TFields de un Dataset. La correspondencia
+    /// entre TField y property es por nombre. Es decir, en esencia lo que hace es
+    /// Target.xxx := Source['xxx']
+    /// </summary>
     class procedure InjectFields(Target: TObject; Source: TDataset);
+    /// <summary>
+    /// Asigna las properties de Target a partir de los Items de un Slice. La correspondencia
+    /// entre Item y property es por nombre. Es decir, en esencia lo que hace es
+    /// Target.xxx := Source.ItemOf['xxx'].Value;
+    /// </summary>
     class procedure InjectItems(Target: TObject; Source: TSlice);
+    /// <summary>
+    /// Asigna las properties de Target a partir de las propeties de Source. La correspondencia
+    /// entre Item y property es por nombre. Es decir, en esencia lo que hace es
+    /// Target.xxx := Source.ItemOf['xxx'].Value;
+    /// </summary>
     class procedure InjectProps(Target: TObject; Source: TObject);overload;
     class procedure InjectProps(Target: TObject; Source: TObject; Names: array of string);overload;
   end;
 
-  TVoteQuality = (VqRequires, VqPrefers);
+  TValuesInjector = class(TPropertiesInjector)
+  end deprecated 'use TPropertiesInjector';
 
+  /// <summary>
+  /// Busqueda de métodos mediante RTTI usando un criterio de votación
+  /// </summary>
+  TVoteQuality = (VqRequires, VqPrefers);
   TVote = record
   const
     VETO = Integer.MinValue;
-
   var
     Value: Integer;
     class operator Implicit(AQuality: TVoteQuality): TVote;
@@ -92,6 +206,9 @@ type
   TVoteFunc = Reference to function(const Method: TRttiMethod): TVote;
   TMethodKinds = set of TMethodKind;
 
+  /// <summary>
+  /// Helpers para buscar métodos por nombre y/o argumentos
+  /// </summary>
   TMethodVoter = record helper for TMethod
     class function KindIs(const AMethodKinds: TMethodKinds; Quality: TVoteQuality = TVoteQuality.VqRequires): TVoteFunc; static;
     class function NameIs(const AName: string; Quality: TVoteQuality = TVoteQuality.VqRequires): TVoteFunc; static;
@@ -99,23 +216,64 @@ type
     class function ArgsMatch(const SomeArgs: TArray<TValue>; Quality: TVoteQuality = TVoteQuality.VqRequires): TVoteFunc; static;
   end;
 
+  /// <summary>
+  /// Extensiones a un objeto:
+  /// </summary>
   TObjectHelper = class helper for TObject
   private
     class function Voting(Method: TRttiMethod; Voters: TArray<TVoteFunc>): TVote;
   public
+  /// <summary>
+  ///  Detectar si Self es una TObjectList<T>
+  /// </summary>
     class function IsObjList: Boolean;
+  /// <summary>
+  ///  Si Self es una TObjectList<T> retorna T, o nil en otro caso
+  /// </summary>
     class function ObjListItemClass: TClass;
+  /// <summary>
+  ///  Retorna si Self es una TObjectList<T> en cuyo caso ItemClass contendrá T
+  /// </summary>
     class function TyrObjListItemClass(out ItemClass: TClass): Boolean; overload;
-    class function DefaultCtor: TRttiMethod;
-    class function TryInvokeDefaultCtor(out ResultValue: TObject): Boolean;
-    class function InvokeDefaultCtor: TObject;
+
+  /// <summary>
+  ///  Busca un método mediante un criterio de votación. Devuelve el que obtiene mayor puntuación
+  /// </summary>
     class function MethodBy(Voters: TArray<TVoteFunc>): TRttiMethod;
-    class function ClassInvoke(Args: TArray<TValue>; Voters: TArray<TVoteFunc>): TValue;
-    class function TryClassInvoke(Args: TArray<TValue>; Voters: TArray<TVoteFunc>; out ResultValue: TValue): Boolean;
+
+  /// <summary>
+  ///  Retorna el constructor por defecto (sin argumentos). Si hay varios posibles,
+  ///  se busca preferentemente uno llamado 'Create'.
+  /// </summary>
+    class function DefaultCtor: TRttiMethod;
+
+  /// <summary>
+  ///  Busca el constructor por defecto mediante DefaultCtor y lo invoca.
+  ///  Retorna True si encuentra el cosntructor.
+  /// </summary>
+    class function TryInvokeDefaultCtor(out ResultValue: TObject): Boolean;
+
+  /// <summary>
+  ///  Busca el constructor por defecto mediante DefaultCtor y lo invoca.
+  ///  Raise si **no** encuentra el cosntructor.
+  /// </summary>
+    class function InvokeDefaultCtor: TObject;
+
+  // Invocar un método cuyos argumentos concuerdan con Args y cumple unos criterios de votación.
     function TryInvoke(Args: TArray<TValue>; Voters: TArray<TVoteFunc>; out ResultValue: TValue): Boolean;
     function Invoke(Args: TArray<TValue>; Voters: TArray<TVoteFunc>): TValue;
+
+  // Invocar un método de clase cuyos argumentos concuerdan con Args y cumple unos criterios de votación.
+    class function TryClassInvoke(Args: TArray<TValue>; Voters: TArray<TVoteFunc>; out ResultValue: TValue): Boolean;
+    class function ClassInvoke(Args: TArray<TValue>; Voters: TArray<TVoteFunc>): TValue;
   end;
 
+
+  /// <summary>
+  ///  Las RegularExpressions de Delphi no permiten acceder a la información de los
+  ///  grupos usados en una RegExpr. Esto es un workaround para esquivar esta limitación
+  ///  absurda.
+  /// </summary>
   TGroupCollectionHelper = record helper for System.RegularExpressions.TGroupCollection
   public
     function TryItem(Index: Variant): Boolean; overload;
@@ -352,7 +510,7 @@ begin
   end;
 end;
 
-function TValueHelper.TryGetNullable(out Value: TValue): Boolean;
+function TValueHelper.TryGetNullable(var Value: TValue): Boolean;
 var
   RContext: TRttiContext;
   RType: TRttiType;
@@ -361,18 +519,31 @@ var
 begin
   Result := IsNullable;
   if not Result then
+  begin
+    Value := Self;
     Exit;
+  end;
 
-  Instance := GetReferenceToRawData;
-  RType := RContext.GetType(TypeInfo);
-  RField := RType.GetField('FValue');
-  if not Assigned(RField) then
-    raise Exception.Create('FValue field not found in TNullable');
-
-  if Instance.IsNull then
+  if Self.IsEmpty then
     Value := nil
   else
-    Value := RField.GetValue(Instance);
+  begin
+    Instance := GetReferenceToRawData;
+    RType := RContext.GetType(TypeInfo);
+    RField := RType.GetField('FValue');
+    if not Assigned(RField) then
+      raise Exception.Create('FValue field not found in TNullable');
+
+    if Instance.HasValue then
+      Value := RField.GetValue(Instance)
+    else
+      Value := nil;
+  end;
+end;
+
+function TValueHelper.GetNullable: TValue;
+begin
+  TryGetNullable(Result);
 end;
 
 function TValueHelper.IsNullable: Boolean;
@@ -402,13 +573,12 @@ end;
 
 { TValuesInjector }
 
-class procedure TValuesInjector.InjectProps(Target: TObject; Source: TObject);
+class procedure TPropertiesInjector.InjectProps(Target: TObject; Source: TObject);
 begin
   InjectProps(Target, Source, []);
 end;
 
-class procedure TValuesInjector.InjectProps(Target, Source: TObject;
-  Names: array of string);
+class procedure TPropertiesInjector.InjectProps(Target, Source: TObject; Names: array of string);
 var
   RC: TRttiContext;
   RTSource: TRttiInstanceType;
@@ -422,6 +592,7 @@ begin
     Exit;
   RTTarget := RC.GetType(Target.ClassType) as TRttiInstanceType;
   RTSource := RC.GetType(Source.ClassType) as TRttiInstanceType;
+
   PropSource := nil;
   try
     for PropSource in RTSource.GetProperties do begin
@@ -437,7 +608,7 @@ begin
   end;
 end;
 
-class procedure TValuesInjector.InjectFields(Target: TObject; Source: TDataset);
+class procedure TPropertiesInjector.InjectFields(Target: TObject; Source: TDataset);
 var
   RC: TRttiContext;
   RTTarget: TRttiInstanceType;
@@ -458,7 +629,7 @@ begin
   end;
 end;
 
-class procedure TValuesInjector.InjectItems(Target: TObject; Source: TSlice);
+class procedure TPropertiesInjector.InjectItems(Target: TObject; Source: TSlice);
 var
   RC: TRttiContext;
   RTTarget: TRttiInstanceType;
@@ -468,7 +639,7 @@ begin
     Exit;
   RTTarget := RC.GetType(Target.ClassType) as TRttiInstanceType;
   Source.ForEach(
-    procedure(var Item: TSlice.TItem; var StopEnum: Boolean)
+    procedure(var Item: TSlice.TItem)
     begin
       PropTarget := RTTarget.GetProperty(Item.Name) as TRttiInstanceProperty;
       if Assigned(PropTarget) then
@@ -631,12 +802,11 @@ class function TObjectHelper.TryInvokeDefaultCtor(out ResultValue: TObject): Boo
 var
   Method: TRttiMethod;
 begin
-  Result := False;
   Method := DefaultCtor;
-  if Method = nil then
+  Result := Method <> nil;
+  if not Result then
     Exit;
   ResultValue := Method.Invoke(Self, []).AsObject;
-  Result := True;
 end;
 
 function TObjectHelper.Invoke(Args: TArray<TValue>; Voters: TArray<TVoteFunc>): TValue;
@@ -694,10 +864,132 @@ end;
 
 function TTypeInfoHelper.IsNullableType: Boolean;
 begin
-  Result := GetTypeName(@Self).Contains('TNullable');
+  Result := TNullable.IsNullableType(@Self);
+end;
+
+function TTypeInfoHelper.NullableBaseType: PTypeInfo;
+begin
+  Result := TNullable.BaseTypeInfo(@Self);
+end;
+
+function TTypeInfoHelper.IsPlainType: Boolean;
+begin
+  Result := (Kind in [tkInteger, tkChar, tkEnumeration, tkFloat,
+    tkString, tkSet, tkWChar, tkLString, tkWString,
+    tkVariant, tkInt64, tkUString]) or IsNullableType;
+end;
+
+function TTypeInfoHelper.IsEnumType: Boolean;
+begin
+  Result := Kind in [TkEnumeration];
+end;
+
+function TTypeInfoHelper.IsCollectionType: Boolean;
+begin
+  Result := (Kind = tkClass) and TypeData.ClassType.IsObjList;
+end;
+
+function TTypeInfoHelper.IsReferenceType: Boolean;
+begin
+  Result := (Kind = tkClass) and not IsCollectionType;
+end;
+
+function TTypeInfoHelper.IsNumberType: Boolean;
+begin
+  Result := Kind in [TkInteger, TkFloat, TkInt64];
+end;
+
+function TTypeInfoHelper.IsIntegerType: Boolean;
+begin
+  Result := Kind in [TkInteger, TkInt64];
+end;
+
+function TTypeInfoHelper.IsFloatType: Boolean;
+begin
+  Result := Kind in [TkFloat];
+end;
+
+function TTypeInfoHelper.IsBooleanType: Boolean;
+begin
+  Result := (@Self = System.TypeInfo(Boolean));
+end;
+
+function TTypeInfoHelper.IsStringType: Boolean;
+begin
+  Result := Kind in [TkString, TkLString, TkWString, TkUString];
+end;
+
+function TTypeInfoHelper.IsCharType: Boolean;
+begin
+  Result := Kind in [TkChar, TkWChar];
+end;
+
+function TTypeInfoHelper.IsTimeType: Boolean;
+begin
+  Result := (@Self = System.TypeInfo(TTime));
+end;
+
+function TTypeInfoHelper.IsDateType: Boolean;
+begin
+  Result := (@Self = System.TypeInfo(TDate));
+end;
+
+function TTypeInfoHelper.IsDateTimeType: Boolean;
+begin
+  Result := (@Self = System.TypeInfo(TDateTime));
 end;
 
 { TRttiTypeHelper }
+
+function TRttiTypeHelper.IsFloatType: Boolean;
+begin
+  Result := Self.Handle.IsFloatType;
+end;
+
+function TRttiTypeHelper.IsIntegerType: Boolean;
+begin
+  Result := Self.Handle.IsIntegerType;
+end;
+
+function TRttiTypeHelper.IsNumberType: Boolean;
+begin
+  Result := Self.Handle.IsNumberType;
+end;
+
+function TRttiTypeHelper.IsStringType: Boolean;
+begin
+  Result := Self.Handle.IsStringType;
+end;
+
+function TRttiTypeHelper.IsCharType: Boolean;
+begin
+  Result := Self.Handle.IsCharType;
+end;
+
+function TRttiTypeHelper.IsDateType: Boolean;
+begin
+  Result := Self.Handle.IsDateType;
+end;
+
+function TRttiTypeHelper.IsTimeType: Boolean;
+begin
+  Result := Self.Handle.IsTimeType;
+end;
+
+function TRttiTypeHelper.IsDateTimeType: Boolean;
+begin
+  Result := Self.Handle.IsDateTimeType;
+end;
+
+function TRttiTypeHelper.IsBooleanType: Boolean;
+begin
+  Result := Self.Handle.IsBooleanType;
+end;
+
+function TRttiTypeHelper.IsEnumType: Boolean;
+begin
+  Result := Self.Handle.IsEnumType;
+end;
 
 function TRttiTypeHelper.IsNullableType: Boolean;
 begin
@@ -706,25 +998,21 @@ end;
 
 function TRttiTypeHelper.IsPlainType: Boolean;
 begin
-  Result := not(Self is TRttiStructuredType) or IsNullableType;
+  Result := Self.Handle.IsPlainType;
+end;
+
+function TRttiTypeHelper.IsCollectionType: Boolean;
+begin
+  Result := Self.Handle.IsCollectionType
 end;
 
 function TRttiTypeHelper.IsReferenceType: Boolean;
 begin
-  Result := not IsPlainType and not IsCollectionType;
-end;
-
-function TRttiTypeHelper.IsCollectionType: Boolean;
-var
-  Klass: TClass;
-begin
-  if not IsInstance then
-    Exit(False);
-  Klass := AsInstance.MetaclassType;
-  Result := Klass.IsObjList;
+  Result := Self.Handle.IsReferenceType;
 end;
 
 { TGroupCollectionHelper }
+
 // Helper to extract RegEx object
 type
   TScopeExitNotifierCraked = class(TInterfacedObject)

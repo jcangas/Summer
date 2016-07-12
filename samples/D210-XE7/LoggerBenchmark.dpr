@@ -4,7 +4,7 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   Summer.Utils,
-  LoggerBenchmark.MainForm in '..\LoggerBenchmark.MainForm.pas' {MainForm};
+  LoggerBenchmark.MainForm in '..\Logger\LoggerBenchmark.MainForm.pas' {MainForm};
 
 {$R *.res}
 

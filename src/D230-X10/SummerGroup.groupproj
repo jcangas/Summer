@@ -1,0 +1,62 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{33E2713C-1E33-437C-AA2B-C88593200ACC}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Summer.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Summer.Win.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Summer">
+        <MSBuild Projects="Summer.dproj"/>
+    </Target>
+    <Target Name="Summer:Clean">
+        <MSBuild Projects="Summer.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Summer:Make">
+        <MSBuild Projects="Summer.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Summer_Win">
+        <MSBuild Projects="Summer.Win.dproj"/>
+    </Target>
+    <Target Name="Summer_Win:Clean">
+        <MSBuild Projects="Summer.Win.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Summer_Win:Make">
+        <MSBuild Projects="Summer.Win.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Summer;Summer_Win"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Summer:Clean;Summer_Win:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Summer:Make;Summer_Win:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='All'">
+        <BuildGroupProject Include="Summer.dproj">
+            <ProjectGuid>{C153B219-4473-4085-B8E7-9E03D606FE86}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Summer.Win.dproj">
+            <ProjectGuid>{2050B354-93DD-4642-B752-49C6B350941C}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+</Project>

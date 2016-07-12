@@ -1,45 +1,15 @@
 = To Do
 :source-highlighter: highlightjs
+:nofooter:
 
-== New Features
+== Nuevas funciones
 
-=== JSON driven json generation
+=== SICO
 
-En el método ToJSONObject, en lugar de una lista de nombres en un atributo, pasar una "plantilla" basada en json. La plantillas seria simplmente una instancia ejemplo, pero omitiendo los valores de las claves
+* Función ThreadSingleton
+* AsDefault: ahora toma siempre el nombre '' como Default -> posibilidad de indicar explicitamente que implmentación
+se actva por defecto.
 
-[source, json]
-----
-{ "Fecha":,
-  "Hora":,
-  "Paciente": {
-    "Apellidos":, "Nombre":, "NumPac":, "TextoTrato":
-    },
-  "Texto":
-}
-----
+* PropertyInjection: Ahora solo tiene constructor injection
 
-
-[source, delphi]
-----
-TJSON.ToJsonObject(Entity, '"Fecha":,"Hora":,"Paciente": {"Apellidos":, "Nombre":, "NumPac":, "TextoTrato":}, "Texto":')
-----
-
-O tal vez en un JSONAttr para la clase. Algo asi:
-
-[source, delphi]
-----
-Attr := JSONTemplateAttribute.Create(True, '"Fecha":,"Hora":,"Paciente": {"Apellidos":, "Nombre":, "NumPac":, "TextoTrato":}, "Texto":');
-
-TJSON.ToJsonObject(Entity, Attr);
-----
-
-Tambien podemos considerar admitir que la plantilla se escriba en un "json aligerado", pero facil de convertir en json valido con algo de RegExp, de forma que nos evitemos hacer un parser especifico.
-
-[source, delphi]
-----
-TJSON.ToJsonObject(Entity, 'Fecha, Hora, Paciente: {Apellidos, Nombre, NumPac, TextoTrato}, Texto');
-----
-
-== Enhancements / Refactorings
-
-== Bug fixing
+* Reglas mediante attributos [Inject()]
