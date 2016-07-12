@@ -53,6 +53,7 @@ type
     property FormatName: string read FFormatName;
   end;
 
+  /// <summary> Grupo de utilidades para generar JSON </summary>
   TJSON = class
   public type
     JSONError = class(Exception);
