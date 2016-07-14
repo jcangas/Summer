@@ -1,0 +1,62 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{640FF209-E6B9-491E-BF6E-B259A0E3B456}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="LoggerBenchmark.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="EncryptSample.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="LoggerBenchmark">
+        <MSBuild Projects="LoggerBenchmark.dproj"/>
+    </Target>
+    <Target Name="LoggerBenchmark:Clean">
+        <MSBuild Projects="LoggerBenchmark.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LoggerBenchmark:Make">
+        <MSBuild Projects="LoggerBenchmark.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="EncryptSample">
+        <MSBuild Projects="EncryptSample.dproj"/>
+    </Target>
+    <Target Name="EncryptSample:Clean">
+        <MSBuild Projects="EncryptSample.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="EncryptSample:Make">
+        <MSBuild Projects="EncryptSample.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="LoggerBenchmark;EncryptSample"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="LoggerBenchmark:Clean;EncryptSample:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="LoggerBenchmark:Make;EncryptSample:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='All'">
+        <BuildGroupProject Include="EncryptSample.dproj">
+            <ProjectGuid>{B1B7F84F-5608-460B-9492-1B5FEF45C299}</ProjectGuid>
+            <Configurations>samples</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LoggerBenchmark.dproj">
+            <ProjectGuid>{8E1691B0-F8CA-4166-80C8-9DC8FD8F9BA1}</ProjectGuid>
+            <Configurations>samples</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+</Project>

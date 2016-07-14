@@ -54,7 +54,7 @@
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
-    <Import Project="..\..\samples.optset" Condition="'$(Base)'!='' And Exists('..\..\samples.optset')"/>
+    <Import Project="..\samples.optset" Condition="'$(Base)'!='' And Exists('..\samples.optset')"/>
     <PropertyGroup Condition="'$(Base)'!=''">
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <AUP_WRITE_CALENDAR>true</AUP_WRITE_CALENDAR>
@@ -74,7 +74,7 @@
         <DCC_S>false</DCC_S>
         <DCC_F>false</DCC_F>
         <DCC_K>false</DCC_K>
-        <CfgDependentOn>..\..\samples.optset</CfgDependentOn>
+        <CfgDependentOn>..\samples.optset</CfgDependentOn>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <Android_SplashImage426>$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png</Android_SplashImage426>
@@ -192,17 +192,18 @@
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
+    <Import Project="..\..\samples.optset" Condition="'$(Base)'!='' And Exists('..\..\samples.optset')"/>
     <Import Project="..\..\source.optset" Condition="'$(Base)'!='' And Exists('..\..\source.optset')"/>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\LoggerBenchmark.MainForm.pas">
+        <DCCReference Include="..\Logger\LoggerBenchmark.MainForm.pas">
             <Form>MainForm</Form>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
-            <DependentOn>..\..\samples.optset</DependentOn>
+            <DependentOn>..\samples.optset</DependentOn>
         </BuildConfiguration>
         <BuildConfiguration Include="samples">
             <Key>Cfg_1</Key>
@@ -229,7 +230,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\LoggerBenchmark.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\out\D210\Win32\samples\bin\LoggerBenchmark.exe" Configuration="samples" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>LoggerBenchmark.exe</RemoteName>
                         <Overwrite>true</Overwrite>
@@ -240,6 +241,12 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                     <Platform Name="iOSSimulator">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win32\Debug\LoggerBenchmark.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>LoggerBenchmark.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

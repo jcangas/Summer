@@ -1,11 +1,14 @@
-{
-  Summer Framework for Delphi http://github.com/jcangas/SummerFW4D
-  SummerFW4D by Jorge L. Cangas <jorge.cangas@gmail.com>
-  SummerFW4D - Copyright(c) Jorge L. Cangas, Some rights reserved.
-  Your reuse is governed by the Creative Commons Attribution 3.0 License
-  ----
-  Unit BASE: https://github.com/colinj/TDateTimeHelper/blob/master/DateTimeHelper.pas
+{== License ==
+- "Summer for Delphi" by Jorge L. Cangas <jorge.cangas@gmail.com> is licensed under CC BY 4.0
+-  Summer for Delphi - http://github.com/jcangas/Summer
+-  Summer - Copyright(c) Jorge L. Cangas, Some rights reserved.
+-  Your reuse is governed by the Creative Commons Attribution 4.0 License http://creativecommons.org/licenses/by/4.0/
 }
+
+/// <summary>
+/// This unit is a fork of:
+/// https://github.com/colinj/TDateTimeHelper/blob/master/DateTimeHelper.pas
+/// </summary>
 unit Summer.DateTime;
 
 interface
@@ -16,6 +19,10 @@ uses
   System.DateUtils;
 
 type
+  /// <summary>
+  ///   A simple helper for create TTime values and convert to string
+  ///  and to/from JSON
+  /// </summary>
   TTimeHelper = record helper for TTime
   public
     class function Create(const aHour, aMinute, aSecond, aMillisecond: Word): TTime; overload; static; inline;
@@ -26,6 +33,10 @@ type
     function FromJSON(Value: string): TTime;
   end;
 
+  /// <summary>
+  ///   A simple helper for create TDate values and convert to string
+  ///  and to/from JSON
+  /// </summary>
   TDateHelper = record helper for TDate
   public
     class function Create(const aYear, aMonth, aDay: Word): TDate; overload; static; inline;
@@ -36,6 +47,11 @@ type
     function FromJSON(Value: string): TDate;
   end;
 
+  /// <summary>
+  ///   A helper for create TTime values and convert to string
+  ///  and to/from JSON. Also add several methods for
+  ///  pretty manipulation of TDateTime values
+  /// </summary>
   TDateTimeHelper = record helper for TDateTime
   private
     function GetDay: Word; //inline;
