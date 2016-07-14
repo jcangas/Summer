@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
   Summer.ILogger, FMX.Layouts, FMX.Memo, FMX.Controls.Presentation,
-  FMX.Edit, FMX.EditBox, FMX.NumberBox, FMX.ScrollBox;
+  FMX.Edit, FMX.EditBox, FMX.NumberBox;
 
 type
   TTestInfo = record
