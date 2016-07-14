@@ -10,16 +10,13 @@ object MainForm: TMainForm
   DesignerMasterStyle = 0
   object Memo1: TMemo
     Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
-    DataDetectorTypes = []
-    ReadOnly = True
-    ShowSizeGrip = True
     Align = Client
     Size.Width = 478.000000000000000000
     Size.Height = 384.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
-    Viewport.Width = 474.000000000000000000
-    Viewport.Height = 380.000000000000000000
+    ReadOnly = True
+    ShowSizeGrip = True
   end
   object ToolBar1: TToolBar
     Size.Width = 478.000000000000000000
