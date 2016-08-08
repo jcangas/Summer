@@ -696,6 +696,19 @@ begin
   end;
   repeat
   until (not FConsuming);
+
+  // Flush log entries added meanwhile last Sleep in consume and
+  // Delayed is set to False and reevaluated in consume proc.
+  AcquireLock;
+  try
+    FQueue := TQueue<String>(ForDestroy);
+    while HasWork do
+      FWriterProc(FQueue.Dequeue);
+    FQueue := nil;
+  finally
+    ReleaseLock;
+  end;
+
   ForDestroy.Free;
   inherited;
 end;
