@@ -588,7 +588,7 @@ begin
       SuportedType := Self.FieldTypeToDTOColumnType(Field.DataType);
 
       if (SuportedType = TJSON.SupportedType.TString) then begin
-        Result.AddPair(Field.FieldName, Field.AsWideString);
+        Result.AddPair(Field.FieldName, TJSONString.Create(Field.AsWideString));
       end
       else if (SuportedType = TJSON.SupportedType.TInteger) then begin
         Result.AddPair(Field.FieldName, TJSONNumber.Create(Field.AsLargeInt));
@@ -603,13 +603,13 @@ begin
           Result.AddPair(Field.FieldName, TJSONFalse.Create);
       end
       else if (SuportedType = TJSON.SupportedType.TDateTime) then begin
-        Result.AddPair(Field.FieldName, Field.AsDateTime.ToJSON);
+        Result.AddPair(Field.FieldName, TJSONString.Create(Field.AsDateTime.ToJSON));
       end
       else if (SuportedType = TJSON.SupportedType.TDate) then begin
-        Result.AddPair(Field.FieldName, Field.AsDateTime.Date.ToJSON);
+        Result.AddPair(Field.FieldName, TJSONString.Create(Field.AsDateTime.Date.ToJSON));
       end
       else if (SuportedType = TJSON.SupportedType.TTime) then begin
-        Result.AddPair(Field.FieldName, Field.AsDateTime.Time.ToJSON);
+        Result.AddPair(Field.FieldName, TJSONString.Create(Field.AsDateTime.Time.ToJSON));
       end
       else begin
         raise TJSON.UnSuportedType(TEnumHelper<TJSON.SupportedType>.ToString(SuportedType));
